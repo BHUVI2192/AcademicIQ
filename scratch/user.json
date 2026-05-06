@@ -1,0 +1,7 @@
+{
+  "id": "0d6700bb-86a9-4392-ac44-242a1ab1e87b",
+  "email": "admin@academeiq.com",
+  "password": "Admin@1234",
+  "email_confirm": true,
+  "user_metadata": { "role": "admin" }
+}
