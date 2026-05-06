@@ -81,8 +81,9 @@ export function LoginPage({ isAdminView: isAdminProp }: LoginPageProps) {
         throw new Error('No parent account found or no student linked.');
       }
 
+      const internalEmail = `parent.${normalized.replace(/\D/g, '')}@academeiq.net`;
       const { error } = await supabase.auth.signInWithPassword({
-        email: profile.email,
+        email: internalEmail,
         password: parentPassword,
       });
       
@@ -106,21 +107,19 @@ export function LoginPage({ isAdminView: isAdminProp }: LoginPageProps) {
     setSubmitting(true);
     try {
       const normalized = normalizePhone(phone);
-      const { data: profile, error: profileErr } = await supabase
-        .rpc('check_parent_login_allowed', { p_phone: normalized })
-        .maybeSingle();
-
-      if (profileErr) throw profileErr;
-      if (!profile || !profile.email) throw new Error('No account found for this phone number.');
-
-      const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      
+      // Call the specialized recovery edge function
+      const { data, error } = await supabase.functions.invoke('recover-password', {
+        body: { phone: normalized }
       });
+
       if (error) throw error;
-      toast.success('Recovery instructions dispatched to linked email');
+      if (!data.success) throw new Error(data.error);
+
+      toast.success('Temporary password dispatched to your linked email');
       setParentView('login');
     } catch (err: any) {
-      toast.error(err.message ?? 'Reset failed');
+      toast.error(err.message ?? 'Recovery failed');
     } finally {
       setSubmitting(false);
     }
