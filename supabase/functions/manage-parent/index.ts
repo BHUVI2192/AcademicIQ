@@ -33,76 +33,105 @@ Deno.serve(async (req) => {
 
     console.log(`[ManageParent] Phone: ${normalizedPhone}, Internal Email: ${internalEmail}`);
 
-    // 1. Check if profile exists by phone
+    // 1. Check if profile exists by phone (REGARDLESS of role)
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, role, email')
       .eq('phone', normalizedPhone)
-      .eq('role', 'parent')
       .maybeSingle();
 
     let userId = existingProfile?.id;
+    let existingRole = existingProfile?.role;
 
-    // 2. Ensure Auth User exists with internal email
+    // 2. Ensure Auth User exists
     if (userId) {
-      console.log(`[ManageParent] Updating auth user ${userId}`);
+      console.log(`[ManageParent] Existing profile found (ID: ${userId}, Role: ${existingRole}).`);
+      // If they are not a parent, we don't change their role (they might be faculty), 
+      // but we ensure they have the necessary metadata.
       await supabase.auth.admin.updateUserById(userId, {
-        email: internalEmail,
-        password: tempPassword,
-        user_metadata: { role: 'parent', college_id, full_name, phone: normalizedPhone },
-        email_confirm: true
+        user_metadata: { 
+          // Preserve existing role if it's not 'parent', otherwise set to 'parent'
+          role: existingRole || 'parent', 
+          college_id, 
+          full_name, 
+          phone: normalizedPhone 
+        }
       });
     } else {
-      console.log(`[ManageParent] Creating new auth user for ${internalEmail}`);
-      const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
-        email: internalEmail,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { role: 'parent', college_id, full_name, phone: normalizedPhone }
-      });
+      // Check if auth user exists by internal email if profile wasn't found
+      const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      const foundByEmail = users.find(u => u.email === internalEmail);
+      
+      if (foundByEmail) {
+        userId = foundByEmail.id;
+        console.log(`[ManageParent] Auth user found by email (ID: ${userId}) but no profile.`);
+      } else {
+        console.log(`[ManageParent] Creating new auth user for ${internalEmail}`);
+        const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+          email: internalEmail,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { role: 'parent', college_id, full_name, phone: normalizedPhone }
+        });
 
-      if (createErr) {
-        if (createErr.message.includes('already registered')) {
-          console.log('[ManageParent] User exists in Auth but not in Profiles. Syncing...');
-          const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-          const found = users.find(u => u.email === internalEmail);
-          if (found) {
-            userId = found.id;
+        if (createErr) {
+          if (createErr.message.includes('already registered')) {
+            const found = users.find(u => u.email === internalEmail);
+            if (found) {
+              userId = found.id;
+            } else {
+              throw new Error(`User already registered but could not find ID for ${internalEmail}`);
+            }
           } else {
-            throw new Error(`User already registered but could not find ID for ${internalEmail}`);
+            throw createErr;
           }
         } else {
-          throw createErr;
+          userId = newUser.user.id;
         }
-      } else {
-        userId = newUser.user.id;
       }
     }
 
     if (!userId) throw new Error('Failed to acquire user ID');
 
     // 3. Upsert Profile
-    const { error: profileErr } = await supabase.from('profiles').upsert({
+    // We use upsert but we want to PRESERVE the role if it's already something else (like faculty)
+    // and we only update the email if it's currently null or if the new one is provided.
+    const updateData: any = {
       id: userId,
       college_id,
-      role: 'parent',
       full_name: full_name.trim(),
       phone: normalizedPhone,
-      email: email || null,
       temp_password_set: true,
       is_active: true
-    });
+    };
+
+    // Only set role to 'parent' if it doesn't exist yet
+    if (!existingRole) {
+      updateData.role = 'parent';
+    }
+
+    // Only set email if provided and not already set (to avoid clobbering teacher email if it differs)
+    if (email && !existingProfile?.email) {
+      updateData.email = email;
+    }
+
+    const { error: profileErr } = await supabase.from('profiles').upsert(updateData);
 
     if (profileErr) {
+      // If it's a conflict on email, and it's because of a faculty account, we skip updating email
       if (profileErr.code === '23505' && profileErr.message.includes('email')) {
-        throw new Error(`The email "${email}" is already used by another account (likely your faculty account). Please leave it blank or use a different one.`);
+        console.warn(`[ManageParent] Email ${email} already taken. Skipping email update.`);
+        delete updateData.email;
+        const { error: retryErr } = await supabase.from('profiles').upsert(updateData);
+        if (retryErr) throw retryErr;
+      } else {
+        throw profileErr;
       }
-      throw profileErr;
     }
 
     // 4. Link Student if provided
     if (student_id) {
-      console.log(`[ManageParent] Linking student ${student_id} to parent ${userId}`);
+      console.log(`[ManageParent] Linking student ${student_id} to user ${userId}`);
       const { error: mapErr } = await supabase.from('parent_student_map').upsert({
         parent_id: userId,
         student_id,

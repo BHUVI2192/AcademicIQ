@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LineChart,
   Line,
@@ -19,9 +20,29 @@ import { formatDate } from '@/lib/utils';
 
 export function ProgressPage() {
   const { user } = useAuth();
-  const { data: children } = useVerifiedChildren(user?.id);
-  const selectedId = sessionStorage.getItem('aiq.selectedChildId');
-  const child = children?.find((c) => c.student_id === selectedId);
+  const navigate = useNavigate();
+  const { data: children, isLoading: lsChildren } = useVerifiedChildren(user?.id);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => sessionStorage.getItem('aiq.selectedChildId')
+  );
+
+  useEffect(() => {
+    if (lsChildren) return;
+    if (!children || children.length === 0) {
+      navigate('/parent/pending', { replace: true });
+      return;
+    }
+    if (!selectedId || !children.find((c) => c.student_id === selectedId)) {
+      if (children.length === 1) {
+        sessionStorage.setItem('aiq.selectedChildId', children[0].student_id);
+        setSelectedId(children[0].student_id);
+      } else {
+        navigate('/parent/select-child', { replace: true });
+      }
+    }
+  }, [children, lsChildren, selectedId, navigate]);
+
+  const child = children?.find((c) => c.student_id === selectedId) ?? null;
   const { data: rankings, isLoading } = useChildRankings(child?.student_id);
 
   const chartData = useMemo(() => {
@@ -37,12 +58,14 @@ export function ProgressPage() {
       }));
   }, [rankings]);
 
-  if (isLoading) return (
-    <div className="space-y-8 p-12">
+  if (lsChildren || (selectedId && isLoading)) return (
+    <div className="space-y-12 p-8">
       <CardSkeleton />
       <CardSkeleton />
     </div>
   );
+
+  if (!child) return null;
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-12 animate-fade-in pb-12">

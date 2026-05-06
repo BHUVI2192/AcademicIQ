@@ -1,13 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
-import { LogOut, User, Moon, Sun, Menu } from 'lucide-react';
+import { LogOut, User, Moon, Sun, Menu, GraduationCap, ChevronRight } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useVerifiedChildren } from '@/hooks/useChildResults';
 
 interface TopbarProps {
   onMobileMenuClick?: () => void;
 }
 
 export function Topbar({ onMobileMenuClick }: TopbarProps) {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, user } = useAuth();
+  const location = useLocation();
+  const isParentRoute = location.pathname.startsWith('/parent');
+  
+  const isParentEligible = profile?.role === 'parent' || profile?.role === 'faculty' || profile?.role === 'admin';
+  const { data: children } = useVerifiedChildren(isParentEligible ? user?.id : undefined);
+  
+  const selectedChildId = sessionStorage.getItem('aiq.selectedChildId');
+  const selectedChild = children?.find(c => c.student_id === selectedChildId);
+
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
   const ref = useRef<HTMLDivElement>(null);
@@ -35,7 +46,7 @@ export function Topbar({ onMobileMenuClick }: TopbarProps) {
   return (
     <header className="flex h-16 items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 relative z-50">
       {/* Left Context */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         {onMobileMenuClick && (
           <button
             onClick={onMobileMenuClick}
@@ -46,11 +57,26 @@ export function Topbar({ onMobileMenuClick }: TopbarProps) {
           </button>
         )}
         <div className="hidden sm:block">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
-            System Node
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            {isParentRoute && selectedChild ? 'Viewing Student' : 'System Node'}
           </div>
-          <div className="text-sm font-medium text-slate-900 dark:text-white">
-            {profile?.full_name ?? 'User Account'}
+          <div className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+            {isParentRoute && selectedChild ? (
+              <>
+                <GraduationCap className="h-4 w-4 text-slate-400" />
+                <span>{selectedChild.full_name}</span>
+                {children && children.length > 1 && (
+                  <Link 
+                    to="/parent/select-child" 
+                    className="ml-2 flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+                  >
+                    SWITCH <ChevronRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </>
+            ) : (
+              profile?.full_name ?? 'User Account'
+            )}
           </div>
         </div>
       </div>
@@ -91,6 +117,17 @@ export function Topbar({ onMobileMenuClick }: TopbarProps) {
                   {profile?.email}
                 </div>
               </div>
+
+              {isParentEligible && children && children.length > 0 && !isParentRoute && (
+                <Link
+                  to="/parent/select-child"
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center gap-3 rounded px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <GraduationCap className="h-4 w-4 text-indigo-500" />
+                  Parent Portal
+                </Link>
+              )}
               
               <button
                 onClick={() => {

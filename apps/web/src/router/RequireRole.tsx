@@ -21,7 +21,14 @@ export function RequireRole({ role, children }: RequireRoleProps) {
 
   const allowed = Array.isArray(role) ? role : [role];
   
-  if (!userRole || !allowed.includes(userRole)) {
+  // Special handling: Allow faculty and admins to access parent routes if they are also parents.
+  // The specific child-data checks are handled within the parent pages themselves.
+  let isAuthorized = userRole && allowed.includes(userRole);
+  if (!isAuthorized && allowed.includes('parent' as Role) && (userRole === 'faculty' || userRole === 'admin')) {
+    isAuthorized = true;
+  }
+  
+  if (!isAuthorized) {
     console.warn('[RequireRole] Unauthorized access attempt:', { userRole, allowed });
     if (userRole === 'admin') return <Navigate to="/admin/dashboard" replace />;
     if (userRole === 'faculty') return <Navigate to="/faculty/dashboard" replace />;

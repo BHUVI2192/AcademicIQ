@@ -31,7 +31,6 @@ BEGIN
         ) as has_linked_student
     FROM public.profiles p
     WHERE p.phone = p_phone
-      AND p.role = 'parent'
       AND p.is_active = true
     LIMIT 1;
 END;

@@ -81,9 +81,10 @@ export function LoginPage({ isAdminView: isAdminProp }: LoginPageProps) {
         throw new Error('No parent account found or no student linked.');
       }
 
-      const internalEmail = `parent.${normalized.replace(/\D/g, '')}@academeiq.net`;
+      const loginEmail = profile.email || `parent.${normalized.replace(/\D/g, '')}@academeiq.net`;
+      
       const { error } = await supabase.auth.signInWithPassword({
-        email: internalEmail,
+        email: loginEmail,
         password: parentPassword,
       });
       
