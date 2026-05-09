@@ -320,7 +320,7 @@ export function AdminStudentsPage() {
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             <div className="h-10 w-10 rounded-xl bg-academic-blue/10 flex items-center justify-center text-academic-blue font-bold text-sm shadow-inner group-hover:scale-105 transition-transform">
-                              {s.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                              {s.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
                             </div>
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-academic-navy">{s.full_name}</span>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, GraduationCap } from 'lucide-react';
+import { Plus, GraduationCap, Folder } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectory } from '@/context/DirectoryContext';
 import { useBatches, useCreateBatch } from '@/hooks/useBatches';
