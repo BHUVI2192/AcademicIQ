@@ -17,7 +17,9 @@ export function RequireAuth({ children }: RequireAuthProps) {
     );
   }
   if (!user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    const isUnderAdmin = location.pathname.startsWith('/admin');
+    const loginPath = isUnderAdmin ? '/admin/login' : '/login';
+    return <Navigate to={loginPath} state={{ from: location.pathname }} replace />;
   }
   return <>{children}</>;
 }

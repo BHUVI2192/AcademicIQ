@@ -81,7 +81,7 @@ export function ParentProfilePage() {
       <div className="space-y-6">
         <button
           onClick={() => navigate('/parent/dashboard')}
-          className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+          className="group flex items-center gap-2 text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
           Return to Dashboard
@@ -102,16 +102,16 @@ export function ParentProfilePage() {
         <section className="space-y-4">
           <div className="flex items-center gap-2 ml-1">
             <Fingerprint className="h-4 w-4 text-slate-400" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Account Identity</h2>
+            <h2 className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Account Identity</h2>
           </div>
           
           <div className="card grid grid-cols-1 md:grid-cols-2 gap-6 p-8">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-slate-400">
                 <Phone className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-medium uppercase tracking-widest">Phone Identifier</span>
+                <span className="text-[10px] font-normal uppercase tracking-widest">Phone Identifier</span>
               </div>
-              <div className="text-sm font-medium text-slate-900 dark:text-white px-1">
+              <div className="text-sm font-normal text-slate-900 dark:text-white px-1">
                 {/* @ts-ignore */}
                 {user?.phone || user?.user_metadata?.phone || 'Identity Unlinked'}
               </div>
@@ -120,9 +120,9 @@ export function ParentProfilePage() {
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-slate-400">
                 <Mail className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-medium uppercase tracking-widest">Recovery Email</span>
+                <span className="text-[10px] font-normal uppercase tracking-widest">Recovery Email</span>
               </div>
-              <div className="text-sm font-medium text-slate-900 dark:text-white px-1">
+              <div className="text-sm font-normal text-slate-900 dark:text-white px-1">
                 {user?.email?.includes('@parent.academeiq.internal')
                   ? <span className="text-slate-400 italic font-normal">Contact administration to link email</span>
                   : user?.email || 'Not Configured'}
@@ -135,13 +135,13 @@ export function ParentProfilePage() {
         <section className="space-y-4">
           <div className="flex items-center gap-2 ml-1">
             <ShieldCheck className="h-4 w-4 text-slate-400" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Update Credentials</h2>
+            <h2 className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Update Credentials</h2>
           </div>
 
           <div className="card p-8">
             <form onSubmit={handleChangePassword} className="space-y-8 max-w-lg">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Current Password</label>
+                <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Current Password</label>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                   <input
@@ -163,7 +163,7 @@ export function ParentProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">New Security Phrase</label>
+                <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">New Security Phrase</label>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                   <input
@@ -190,7 +190,7 @@ export function ParentProfilePage() {
                       <div className={`h-full flex-1 rounded-md ${newPassword.length >= 12 ? 'bg-emerald-400' : 'bg-slate-100'}`} />
                       <div className={`h-full flex-1 rounded-md ${newPassword.length >= 16 ? 'bg-emerald-400' : 'bg-slate-100'}`} />
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    <span className="text-[9px] font-normal uppercase tracking-widest text-slate-400">
                       Complexity: {newPassword.length < 8 ? 'Weak' : newPassword.length < 12 ? 'Moderate' : 'Strong'}
                     </span>
                   </div>
@@ -198,7 +198,7 @@ export function ParentProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Confirm Identity Change</label>
+                <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Confirm Identity Change</label>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                   <input

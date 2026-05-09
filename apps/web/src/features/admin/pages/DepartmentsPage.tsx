@@ -80,7 +80,7 @@ export function DepartmentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-medium text-slate-900 dark:text-slate-100">Departments</h1>
+          <h1 className="text-2xl font-normal text-slate-900 dark:text-slate-100">Departments</h1>
           <p className="text-sm text-slate-500">Configure academic departments</p>
         </div>
         <button onClick={() => setOpen(true)} className="btn btn-primary inline-flex items-center gap-2">
@@ -113,7 +113,7 @@ export function DepartmentsPage() {
               <tbody>
                 {data.map((d) => (
                   <tr key={d.id}>
-                    <td className="font-medium">{d.name}</td>
+                    <td className="font-normal">{d.name}</td>
                     <td className="font-mono text-xs">{d.code}</td>
                     <td>
                       <button

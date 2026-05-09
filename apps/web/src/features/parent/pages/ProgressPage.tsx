@@ -73,7 +73,7 @@ export function ProgressPage() {
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900/5 dark:bg-white/5 border border-slate-900/10 dark:border-white/10">
           <Activity className="h-3 w-3 text-slate-900 dark:text-white" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">
+          <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-900 dark:text-white">
             Performance Analytics
           </span>
         </div>
@@ -101,13 +101,13 @@ export function ProgressPage() {
           <div className="card p-10 space-y-10">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <h3 className="text-xl font-medium text-slate-900 dark:text-white">Percentage Trend</h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Relative accuracy over time</p>
+                <h3 className="text-xl font-normal text-slate-900 dark:text-white">Percentage Trend</h3>
+                <p className="text-[10px] font-normal uppercase tracking-widest text-slate-400">Relative accuracy over time</p>
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-md bg-indigo-600" />
-                  <span className="text-[10px] font-medium uppercase tracking-widest text-slate-600 dark:text-slate-400 text-right">Score %</span>
+                  <span className="text-[10px] font-normal uppercase tracking-widest text-slate-600 dark:text-slate-400 text-right">Score %</span>
                 </div>
               </div>
             </div>
@@ -166,7 +166,7 @@ export function ProgressPage() {
           <div className="space-y-6">
             <div className="flex items-center gap-2 ml-1">
               <Calendar className="h-4 w-4 text-slate-400" />
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Assessment Archive</h2>
+              <h2 className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Assessment Archive</h2>
             </div>
 
             <div className="card overflow-hidden">
@@ -174,16 +174,16 @@ export function ProgressPage() {
                 <thead>
                   <tr>
                     <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 text-left">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Date</span>
+                      <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Date</span>
                     </th>
                     <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 text-left">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Title</span>
+                      <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Title</span>
                     </th>
                     <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 text-right">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Performance</span>
+                      <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Performance</span>
                     </th>
                     <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 text-right">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Global Rank</span>
+                      <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Global Rank</span>
                     </th>
                   </tr>
                 </thead>
@@ -191,21 +191,21 @@ export function ProgressPage() {
                   {chartData.map((d, i) => (
                     <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-5">
-                        <span className="text-xs font-medium text-slate-400">{d.date}</span>
+                        <span className="text-xs font-normal text-slate-400">{d.date}</span>
                       </td>
                       <td className="px-8 py-5">
-                        <span className="text-sm font-medium text-slate-900 dark:text-white">{d.title}</span>
+                        <span className="text-sm font-normal text-slate-900 dark:text-white">{d.title}</span>
                       </td>
                       <td className="px-8 py-5 text-right">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800">
                           <Target className="h-3 w-3 text-indigo-500" />
-                          <span className="text-xs font-black tabular-nums">{d.percentage.toFixed(2)}%</span>
+                          <span className="text-xs font-normal tabular-nums">{d.percentage.toFixed(2)}%</span>
                         </div>
                       </td>
                       <td className="px-8 py-5 text-right">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20">
                           <Award className="h-3 w-3 text-amber-500" />
-                          <span className="text-xs font-black text-amber-700 dark:text-amber-500 tabular-nums">#{d.rank}</span>
+                          <span className="text-xs font-normal text-amber-700 dark:text-amber-500 tabular-nums">#{d.rank}</span>
                         </div>
                       </td>
                     </tr>

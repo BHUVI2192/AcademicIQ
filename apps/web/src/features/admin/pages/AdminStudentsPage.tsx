@@ -201,20 +201,20 @@ export function AdminStudentsPage() {
       {/* Editorial Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900/5 dark:bg-white/5 border border-slate-900/10 dark:border-white/10">
-            <GraduationCap className="h-3 w-3 text-slate-900 dark:text-white" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">
-              Student Management
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-academic-blue/10 border border-academic-blue/20">
+            <GraduationCap className="h-3.5 w-3.5 text-academic-blue" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-academic-blue">
+              Registry Management
             </span>
           </div>
           <div className="space-y-1">
-            <h1 className="text-5xl font-light tracking-tight text-slate-900 dark:text-white leading-tight">
-              {batchFilter ? activeBatch?.name : 'Academic Records'}
+            <h1 className="text-5xl font-bold tracking-tight text-academic-navy leading-tight">
+              {batchFilter ? activeBatch?.name : 'Institutional Records'}
             </h1>
-            <p className="max-w-xl text-lg text-slate-500 font-light leading-relaxed">
+            <p className="max-w-xl text-lg text-muted-foreground font-medium leading-relaxed">
               {batchFilter 
-                ? `Managing ${filtered.length} students enrolled in the ${activeBatch?.class_level} framework.`
-                : 'Central repository for student profiles, enrollments, and academic associations.'}
+                ? `Managing ${filtered.length} students enrolled in the ${activeBatch?.class_level} academic framework.`
+                : 'Central repository for student profiles, academic enrollments, and institutional registry.'}
             </p>
           </div>
         </div>
@@ -223,16 +223,16 @@ export function AdminStudentsPage() {
           {batchFilter && (
             <button 
               onClick={() => { setBatchFilter(''); setSearch(''); }} 
-              className="btn btn-secondary px-6"
+              className="btn-premium btn-secondary px-6"
             >
-              <ChevronLeft className="h-4 w-4" /> Batches
+              <ChevronLeft className="h-4 w-4 mr-2" /> Back to Cohorts
             </button>
           )}
-          <button onClick={() => setImportOpen(true)} className="btn btn-secondary px-6">
-            <Upload className="h-4 w-4" /> Import
+          <button onClick={() => setImportOpen(true)} className="btn-premium btn-secondary px-6">
+            <Upload className="h-4 w-4 mr-2" /> Collective Import
           </button>
-          <button onClick={() => setCreateOpen(true)} className="btn btn-primary px-8">
-            <Plus className="h-4 w-4" /> Add Student
+          <button onClick={() => setCreateOpen(true)} className="btn-premium btn-primary px-8">
+            <Plus className="h-4 w-4 mr-2" /> Register Student
           </button>
         </div>
       </div>
@@ -246,119 +246,124 @@ export function AdminStudentsPage() {
               <button
                 key={b.id}
                 onClick={() => setBatchFilter(b.id)}
-                className="card group p-8 flex flex-col items-start text-left gap-6 transition-all hover:-translate-y-2 hover:shadow-sm hover:shadow-slate-200/50 dark:hover:shadow-none border-none"
+                className="glass-card group p-8 flex flex-col items-start text-left gap-6 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-academic-blue/10 border-none"
               >
-                <div className="w-16 h-16 bg-slate-900/5 dark:bg-white/5 rounded-md flex items-center justify-center transition-transform group-hover:scale-110 group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-slate-900">
+                <div className="w-16 h-16 bg-academic-blue/10 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-academic-blue group-hover:text-white group-hover:rotate-3 shadow-inner">
                   <Folder className="h-8 w-8" />
                 </div>
-                <div className="space-y-1 w-full">
-                  <h3 className="text-xl font-medium text-slate-900 dark:text-white truncate">{b.name}</h3>
+                <div className="space-y-1.5 w-full">
+                  <h3 className="text-2xl font-bold text-academic-navy truncate group-hover:text-academic-blue transition-colors">{b.name}</h3>
                   <div className="flex items-center justify-between w-full">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      {studentCount} Students
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                      {studentCount} Enrolled Students
                     </p>
-                    <ArrowRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1" />
+                    <ArrowRight className="h-5 w-5 text-academic-blue opacity-0 group-hover:opacity-100 transition-all transform -translate-x-2 group-hover:translate-x-0" />
                   </div>
                 </div>
               </button>
             );
           })}
           {batches?.length === 0 && (
-            <div className="col-span-full py-20 bg-slate-50/50 dark:bg-white/5 rounded-md border-2 border-dashed border-slate-200 dark:border-slate-800">
-               <EmptyState icon={Folder} title="No Cohorts Found" description="Initialize a batch to begin student onboarding." />
+            <div className="col-span-full py-24 glass-card flex flex-col items-center justify-center text-center border-2 border-dashed border-academic-navy/10 bg-academic-navy/[0.02]">
+               <EmptyState icon={Folder} title="No Cohorts Found" description="Initialize an academic batch to begin student onboarding." />
             </div>
           )}
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Internal Table Search */}
-          <div className="flex items-center gap-4 bg-white dark:bg-slate-950 p-2 rounded-md border border-slate-100 dark:border-slate-800 max-w-2xl">
+          <div className="glass-card p-2 max-w-2xl border-none shadow-xl shadow-academic-navy/5">
             <div className="flex-1 relative">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name or unique ID…"
-                className="w-full bg-transparent border-none focus:ring-0 px-14 py-4 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400"
+                placeholder="Search registry by name or unique ID…"
+                className="w-full bg-transparent border-none focus:ring-0 px-14 py-5 text-base font-semibold text-academic-navy placeholder:text-muted-foreground/60"
               />
             </div>
           </div>
 
-          <div className="card overflow-hidden border-none shadow-sm">
+          <div className="glass-card overflow-hidden border-none shadow-2xl shadow-academic-navy/5 p-0">
             {isLoading ? (
               <div className="p-12"><TableSkeleton rows={10} cols={6} /></div>
             ) : filtered.length === 0 ? (
-              <div className="p-20"><EmptyState icon={Users} title="Empty Cohort" description="No student records match your current criteria." /></div>
+              <div className="p-24"><EmptyState icon={Users} title="Empty Cohort" description="No student records match your current criteria in this batch." /></div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full border-separate border-spacing-0">
-                  <thead>
+                  <thead className="bg-academic-navy/[0.03]">
                     <tr>
-                      <th className="sticky top-0 bg-white dark:bg-slate-950/80 px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Unique ID</span>
+                      <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Unique ID</span>
                       </th>
-                      <th className="sticky top-0 bg-white dark:bg-slate-950/80 px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Student Identity</span>
+                      <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Student Identity</span>
                       </th>
-                      <th className="sticky top-0 bg-white dark:bg-slate-950/80 px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Associated Parents</span>
+                      <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Guardians</span>
                       </th>
-                      <th className="sticky top-0 bg-white dark:bg-slate-950/80 backdrop-blur-xl px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-center">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</span>
+                      <th className="px-8 py-6 text-center border-b border-academic-navy/5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Status</span>
                       </th>
-                      <th className="sticky top-0 bg-white dark:bg-slate-950/80 backdrop-blur-xl px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-right">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Actions</span>
+                      <th className="px-8 py-6 text-right border-b border-academic-navy/5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Management</span>
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-900/50">
+                  <tbody className="divide-y divide-academic-navy/5">
                     {filtered.map((s: any) => (
-                      <tr key={s.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                        <td className="px-8 py-5 font-mono text-[11px] font-medium text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white">
+                      <tr key={s.id} className="group hover:bg-academic-navy/[0.01] transition-colors">
+                        <td className="px-8 py-6 font-mono text-[12px] font-bold text-muted-foreground group-hover:text-academic-blue transition-colors">
                           {s.roll_number}
                         </td>
-                        <td className="px-8 py-5">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900 dark:text-white">{s.full_name}</span>
-                            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">
-                              {s.batch?.stream || 'Standard'}
-                            </span>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-xl bg-academic-blue/10 flex items-center justify-center text-academic-blue font-bold text-sm shadow-inner group-hover:scale-105 transition-transform">
+                              {s.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-academic-navy">{s.full_name}</span>
+                              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                                {s.batch?.stream || 'GENERAL'}
+                              </span>
+                            </div>
                           </div>
                         </td>
-                        <td className="px-8 py-5">
+                        <td className="px-8 py-6">
                           <div className="flex flex-wrap gap-2">
                             {s.parent_student_map && s.parent_student_map.length > 0 ? (
                               s.parent_student_map.map((m: any) => (
-                                <div key={m.id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-default">
-                                  <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400">{m.parent?.full_name}</span>
+                                <div key={m.id} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-academic-yellow/10 border border-academic-yellow/20 hover:bg-academic-yellow/20 transition-all cursor-default group/parent">
+                                  <span className="text-[10px] font-bold text-academic-navy/80">{m.parent?.full_name}</span>
                                   {m.is_verified ? (
-                                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                                   ) : (
-                                    <div className="w-1 h-1 rounded-md bg-amber-500 animate-pulse" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-academic-yellow animate-pulse" title="Verification Pending" />
                                   )}
                                 </div>
                               ))
                             ) : (
                               <button 
                                 onClick={() => navigate('/admin/parents', { state: { rollNumber: s.roll_number, batchId: s.batch_id } })}
-                                className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white underline underline-offset-4"
+                                className="text-[11px] font-bold uppercase tracking-widest text-academic-blue/60 hover:text-academic-blue transition-colors underline underline-offset-4 decoration-2"
                               >
-                                + Connect Parent
+                                + Link Guardian
                               </button>
                             )}
                           </div>
                         </td>
-                        <td className="px-8 py-5 text-center">
+                        <td className="px-8 py-6 text-center">
                           <button onClick={() => toggleStatus(s)} className="transition-transform active:scale-95">
-                            <Badge variant={s.is_active !== false ? 'success' : 'danger'} className="font-black uppercase tracking-[0.1em] text-[9px] px-3">
-                              {s.is_active !== false ? 'Active' : 'Archived'}
+                            <Badge variant={s.is_active !== false ? 'success' : 'danger'} className="font-bold uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full shadow-sm">
+                              {s.is_active !== false ? 'Enrolled' : 'Inactive'}
                             </Badge>
                           </button>
                         </td>
-                        <td className="px-8 py-5 text-right">
+                        <td className="px-8 py-6 text-right">
                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                            <button onClick={() => handleDelete(s.id)} className="p-2 rounded-md bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                              <Trash2 className="h-4 w-4" />
+                            <button onClick={() => handleDelete(s.id)} className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100">
+                              <Trash2 className="h-4.5 w-4.5" />
                             </button>
                           </div>
                         </td>
@@ -372,12 +377,12 @@ export function AdminStudentsPage() {
         </div>
       )}
 
-      {/* Individual Modal */}
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="New Student Registration" size="md">
-        <form onSubmit={handleCreate} className="space-y-8 p-2">
+      {/* Registration Modal */}
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Institutional Registration" size="md">
+        <form onSubmit={handleCreate} className="space-y-6 py-4">
           {isGlobalMode && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Institutional Entity</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Affiliated Institution</label>
               <select
                 value={targetCollegeId}
                 onChange={(e) => {
@@ -399,17 +404,17 @@ export function AdminStudentsPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Unique Roll Number</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Roll ID (Unique)</label>
               <input
                 value={rollNumber}
                 onChange={(e) => setRollNumber(e.target.value.toUpperCase())}
-                className="input-premium w-full font-mono font-medium"
+                className="input-premium w-full font-mono font-bold"
                 placeholder="PUC-24-001"
                 required
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Assigned Cohort</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Academic Cohort</label>
               <select value={batchId} onChange={(e) => setBatchId(e.target.value)} className="input-premium w-full" required>
                 <option value="">Select Batch…</option>
                 {modalBatches?.map((b) => (
@@ -420,7 +425,7 @@ export function AdminStudentsPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Legal Full Name</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Legal Student Name</label>
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -431,45 +436,49 @@ export function AdminStudentsPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Date of Birth (Optional)</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Date of Birth</label>
             <div className="relative">
-              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
               <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="input-premium w-full pl-12" />
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <button type="button" onClick={() => setCreateOpen(false)} className="btn btn-secondary px-8">Discard</button>
-            <button type="submit" disabled={create.isPending} className="btn btn-primary px-10">
-              {create.isPending ? 'Processing...' : 'Register Student'}
+          <div className="flex justify-end gap-3 pt-6">
+            <button type="button" onClick={() => setCreateOpen(false)} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">Discard</button>
+            <button type="submit" disabled={create.isPending} className="btn-premium btn-primary px-10">
+              {create.isPending ? 'Validating...' : 'Confirm Registration'}
             </button>
           </div>
         </form>
       </Modal>
 
       {/* Import Modal */}
-      <Modal open={importOpen} onClose={() => { setImportOpen(false); setParsedRows([]); }} title="Collective Onboarding (CSV)" size="xl">
-        <div className="space-y-8 p-2">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50 dark:bg-slate-900/50 p-8 rounded-md border border-slate-100 dark:border-slate-800">
-            <div className="space-y-2 text-center md:text-left">
-              <p className="text-lg font-medium text-slate-900 dark:text-white leading-tight">Collective Data Ingest</p>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-black">Columns: roll_number, full_name, date_of_birth</p>
+      <Modal open={importOpen} onClose={() => { setImportOpen(false); setParsedRows([]); }} title="Collective Onboarding" size="xl">
+        <div className="space-y-8 py-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-academic-blue/[0.03] p-10 rounded-2xl border border-academic-blue/10 shadow-inner">
+            <div className="space-y-3 text-center md:text-left">
+              <p className="text-2xl font-bold text-academic-navy leading-tight">Data Ingestion Engine</p>
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                {['roll_number', 'full_name', 'date_of_birth'].map(col => (
+                  <span key={col} className="px-2 py-0.5 rounded bg-academic-navy/5 text-[10px] font-bold uppercase tracking-wider text-academic-navy/60 border border-academic-navy/5">{col}</span>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-3">
-              <button onClick={downloadStudentTemplate} className="btn btn-secondary px-6">
-                <Download className="h-4 w-4" /> Template
+            <div className="flex gap-4">
+              <button onClick={downloadStudentTemplate} className="btn-premium btn-secondary px-6">
+                <Download className="h-4 w-4 mr-2" /> Template
               </button>
-              <label className="btn btn-primary px-8 cursor-pointer">
-                <Upload className="h-4 w-4" /> Ingest CSV
+              <label className="btn-premium btn-primary px-8 cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" /> Ingest CSV
                 <input type="file" accept=".csv" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} className="hidden" />
               </label>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Destination Cohort</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Target Academic Cohort</label>
             <select value={importBatchId} onChange={(e) => setImportBatchId(e.target.value)} className="input-premium w-full">
-              <option value="">Select class framework…</option>
+              <option value="">Select destination batch…</option>
               {batches?.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
@@ -477,29 +486,29 @@ export function AdminStudentsPage() {
           </div>
 
           {parsedRows.length > 0 && (
-            <div className="card overflow-hidden border-slate-100 dark:border-slate-800">
-              <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payload Preview</span>
-                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{validRows.length} Valid Rows</span>
+            <div className="glass-card overflow-hidden border-academic-navy/5 shadow-inner p-0">
+              <div className="px-8 py-5 bg-academic-navy/[0.03] border-b border-academic-navy/5 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-academic-navy/60">Payload Preview</span>
+                <Badge variant="success" className="bg-emerald-100 text-emerald-700 border-emerald-200 font-bold uppercase text-[9px] px-3">{validRows.length} Rows Verified</Badge>
               </div>
-              <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800">
-                      <th className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">ID</th>
-                      <th className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Identity</th>
-                      <th className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Validation</th>
+              <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                <table className="w-full text-left border-separate border-spacing-0">
+                  <thead className="bg-academic-navy/[0.01] sticky top-0">
+                    <tr>
+                      <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40">Student ID</th>
+                      <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40">Full Identity</th>
+                      <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40 text-right">Validation</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                  <tbody className="divide-y divide-academic-navy/5">
                     {parsedRows.map((r, i) => (
-                      <tr key={i} className={r.__error ? 'bg-red-500/5' : ''}>
-                        <td className="px-6 py-3 font-mono font-medium text-[10px] text-slate-500">{r.roll_number}</td>
-                        <td className="px-6 py-3 text-xs font-medium text-slate-900 dark:text-white">{r.full_name}</td>
-                        <td className="px-6 py-3">
+                      <tr key={i} className={r.__error ? 'bg-red-50/50' : 'hover:bg-academic-navy/[0.01]'}>
+                        <td className="px-8 py-4 font-mono font-bold text-[11px] text-muted-foreground">{r.roll_number}</td>
+                        <td className="px-8 py-4 text-sm font-bold text-academic-navy">{r.full_name}</td>
+                        <td className="px-8 py-4 text-right">
                           {r.__error 
-                            ? <span className="text-[9px] font-black text-red-500 uppercase tracking-wider">{r.__error}</span> 
-                            : <span className="text-[9px] font-black text-emerald-500 uppercase tracking-wider">Verified</span>}
+                            ? <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{r.__error}</span> 
+                            : <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Verified</span>}
                         </td>
                       </tr>
                     ))}
@@ -509,10 +518,10 @@ export function AdminStudentsPage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <button type="button" onClick={() => { setImportOpen(false); setParsedRows([]); }} className="btn btn-secondary px-8">Discard</button>
-            <button onClick={handleUpload} disabled={uploading || !importBatchId || validRows.length === 0} className="btn btn-primary px-10">
-              {uploading ? 'Processing...' : `Execute Ingest (${validRows.length})`}
+          <div className="flex justify-end gap-3 pt-6">
+            <button type="button" onClick={() => { setImportOpen(false); setParsedRows([]); }} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">Discard</button>
+            <button onClick={handleUpload} disabled={uploading || !importBatchId || validRows.length === 0} className="btn-premium btn-primary px-10">
+              {uploading ? 'Processing Transaction...' : `Finalize Ingest (${validRows.length} Records)`}
             </button>
           </div>
         </div>

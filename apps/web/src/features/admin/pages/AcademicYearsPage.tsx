@@ -78,7 +78,7 @@ export function AcademicYearsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-medium text-slate-900 dark:text-slate-100">Academic Years</h1>
+          <h1 className="text-2xl font-normal text-slate-900 dark:text-slate-100">Academic Years</h1>
           <p className="text-sm text-slate-500">Manage academic year configurations</p>
         </div>
         <button onClick={() => setOpen(true)} className="btn btn-primary inline-flex items-center gap-2">
@@ -113,7 +113,7 @@ export function AcademicYearsPage() {
               <tbody>
                 {data.map((y) => (
                   <tr key={y.id}>
-                    <td className="font-medium">{y.label}</td>
+                    <td className="font-normal">{y.label}</td>
                     <td>{formatDate(y.starts_at)}</td>
                     <td>{formatDate(y.ends_at)}</td>
                     <td>
@@ -134,7 +134,7 @@ export function AcademicYearsPage() {
                               { onSuccess: () => toast.success('Set as current') }
                             )
                           }
-                          className="btn btn-ghost text-xs font-medium"
+                          className="btn btn-ghost text-xs font-normal"
                         >
                           Set as current
                         </button>

@@ -18,6 +18,7 @@ import {
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/hooks/useAuth';
 import { isEmail, isPhone, normalizePhone } from '@/lib/validators';
+import { cn } from '@/lib/utils';
 
 type Tab = 'faculty' | 'parent';
 type ParentView = 'login' | 'forgot';
@@ -77,11 +78,13 @@ export function LoginPage({ isAdminView: isAdminProp }: LoginPageProps) {
         .maybeSingle();
 
       if (profileErr) throw profileErr;
-      if (!profile || !profile.has_linked_student || !profile.email) {
+      const parentProfile = profile as { id: string, email: string, full_name: string, has_linked_student: boolean } | null;
+      
+      if (!parentProfile || !parentProfile.has_linked_student || !parentProfile.email) {
         throw new Error('No parent account found or no student linked.');
       }
 
-      const loginEmail = profile.email || `parent.${normalized.replace(/\D/g, '')}@academeiq.net`;
+      const loginEmail = parentProfile.email || `parent.${normalized.replace(/\D/g, '')}@academeiq.net`;
       
       const { error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
@@ -127,12 +130,12 @@ export function LoginPage({ isAdminView: isAdminProp }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[hsl(var(--bg-main))] relative overflow-hidden">
       <div className="w-full max-w-[440px] relative z-10 space-y-8 animate-fade-in">
         
         {/* Nav Back */}
         <div className="flex justify-center">
-          <Link to="/" className="group inline-flex items-center gap-3 px-4 py-2 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all">
+          <Link to="/" className="group inline-flex items-center gap-3 px-4 py-2 rounded-md bg-[hsl(var(--card-bg))] border border-[hsl(var(--card-border))] text-[10px] font-normal uppercase tracking-[0.2em] text-[hsl(var(--text-muted))] hover:text-[hsl(var(--academic-navy))] transition-all">
             <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
             Institutional Overview
           </Link>
@@ -140,43 +143,46 @@ export function LoginPage({ isAdminView: isAdminProp }: LoginPageProps) {
 
         {/* Brand */}
         <div className="text-center space-y-4">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-md bg-slate-900 dark:bg-slate-50 text-white dark:text-slate-900 mx-auto">
+          <div className={cn(
+            "inline-flex h-14 w-14 items-center justify-center rounded-xl text-white mx-auto shadow-md transition-colors",
+            adminPath ? "bg-[hsl(var(--academic-blue))]" : tab === 'faculty' ? "bg-[hsl(var(--academic-cyan))]" : "bg-[hsl(var(--academic-yellow))]"
+          )}>
             {adminPath ? <ShieldCheck className="h-7 w-7" /> : <GraduationCap className="h-7 w-7" />}
           </div>
           <div className="space-y-1">
-            <h1 className="text-3xl font-medium tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-3xl font-medium tracking-tight text-[hsl(var(--academic-navy))]">
               {adminPath ? 'Sovereign Console' : tab === 'faculty' ? 'Faculty Suite' : 'Guardian Portal'}
             </h1>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] font-medium">
+            <p className="text-[10px] text-[hsl(var(--text-muted))] uppercase tracking-[0.3em] font-normal">
               {adminPath ? 'Secure Access Node' : 'AcademeIQ Ecosystem'}
             </p>
           </div>
         </div>
 
-        <div className="card p-10 shadow-lg dark:shadow-none border-slate-200 dark:border-slate-800">
-          {/* Tab Switcher */}
-          {!adminPath && (
-            <div className="mb-8 flex p-1 bg-slate-100 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => { setTab('faculty'); setParentView('login'); }}
-                className={`flex-1 py-2 text-[10px] font-medium uppercase tracking-widest rounded transition-all ${
-                  tab === 'faculty' ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500'
-                }`}
-              >
-                Education Staff
-              </button>
-              <button
-                type="button"
-                onClick={() => { setTab('parent'); setParentView('login'); }}
-                className={`flex-1 py-2 text-[10px] font-medium uppercase tracking-widest rounded transition-all ${
-                  tab === 'parent' ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500'
-                }`}
-              >
-                Guardians
-              </button>
-            </div>
-          )}
+          <div className="card p-10 bg-[hsl(var(--card-bg))] border-[hsl(var(--card-border))]">
+            {/* Tab Switcher */}
+            {!adminPath && (
+              <div className="mb-8 flex p-1 bg-[hsl(var(--academic-navy)/0.03)] rounded-lg border border-[hsl(var(--card-border))]">
+                <button
+                  type="button"
+                  onClick={() => { setTab('faculty'); setParentView('login'); }}
+                  className={`flex-1 py-2 text-[10px] font-normal uppercase tracking-widest rounded transition-all ${
+                    tab === 'faculty' ? 'bg-[hsl(var(--academic-cyan))] text-white shadow-sm' : 'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--academic-cyan))]'
+                  }`}
+                >
+                  Education Staff
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setTab('parent'); setParentView('login'); }}
+                  className={`flex-1 py-2 text-[10px] font-normal uppercase tracking-widest rounded transition-all ${
+                    tab === 'parent' ? 'bg-[hsl(var(--academic-yellow))] text-white shadow-sm' : 'text-[hsl(var(--text-muted))] hover:text-[hsl(var(--academic-yellow))]'
+                  }`}
+                >
+                  Guardians
+                </button>
+              </div>
+            )}
 
           {/* Forms */}
           {(adminPath || tab === 'faculty') && (

@@ -71,54 +71,95 @@ export function BatchesPage() {
   };
 
   return (
-    <div className="space-y-10 py-2">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Section Management</div>
-          <h1 className="text-3xl font-medium tracking-tight text-slate-900 dark:text-slate-100">Classes & Batches</h1>
-          <p className="text-sm text-slate-500">Manage 11th and 12th grade class sections</p>
+    <div className="max-w-[1600px] mx-auto space-y-12 animate-fade-in pb-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-academic-blue/10 border border-academic-blue/20">
+            <GraduationCap className="h-3.5 w-3.5 text-academic-blue" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-academic-blue">
+              Section Management
+            </span>
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-5xl font-bold tracking-tight text-academic-navy leading-tight">Classes & Batches</h1>
+            <p className="max-w-xl text-lg text-muted-foreground font-medium leading-relaxed">
+              Manage and organize 11th and 12th grade academic cohorts and class sections.
+            </p>
+          </div>
         </div>
-        <button onClick={() => setOpen(true)} className="btn btn-primary inline-flex items-center gap-2">
-          <Plus className="h-4 w-4" /> New Class
+        <button onClick={() => setOpen(true)} className="btn-premium btn-primary px-8">
+          <Plus className="h-4 w-4 mr-2" /> New Class
         </button>
       </div>
 
-      <div className="card p-0">
+      <div className="glass-card overflow-hidden border-none shadow-2xl shadow-academic-navy/5 p-0">
         {isLoading ? (
-          <div className="p-6">
-            <TableSkeleton rows={4} cols={5} />
+          <div className="p-12">
+            <TableSkeleton rows={6} cols={5} />
           </div>
         ) : !batches || batches.length === 0 ? (
-          <EmptyState
-            icon={GraduationCap}
-            title="No classes yet"
-            description="Create classes and batches to start organizing students"
-            action={{ label: 'Create class', onClick: () => setOpen(true) }}
-          />
+          <div className="py-24">
+            <EmptyState
+              icon={GraduationCap}
+              title="No classes defined"
+              description="Create your first academic cohort to start organizing students and curriculum."
+              action={{ label: 'Create Class', onClick: () => setOpen(true) }}
+            />
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="table-clean">
-              <thead>
+            <table className="w-full border-separate border-spacing-0">
+              <thead className="bg-academic-navy/[0.03]">
                 <tr>
-                  <th>Section / Name</th>
-                  <th>Class</th>
-                  <th>Stream</th>
-                  <th>Academic Year</th>
-                  <th>Status</th>
+                  <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Section / Identification</span>
+                  </th>
+                  <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Class Level</span>
+                  </th>
+                  <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Academic Stream</span>
+                  </th>
+                  <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Calendar Year</span>
+                  </th>
+                  <th className="px-8 py-6 text-center border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Status</span>
+                  </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-academic-navy/5">
                 {batches.map((b) => (
-                  <tr key={b.id}>
-                    <td className="font-medium">{b.name}</td>
-                    <td>{b.class_level ? `Class ${b.class_level}` : '—'}</td>
-                    <td>{b.stream ?? '—'}</td>
-                    <td>{b.academic_year?.label ?? '—'}</td>
-                    <td>
+                  <tr key={b.id} className="group hover:bg-academic-navy/[0.01] transition-colors">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-academic-blue/10 flex items-center justify-center text-academic-blue">
+                          <Folder className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-academic-navy mb-0.5 group-hover:text-academic-blue transition-colors text-lg">{b.name}</div>
+                          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{b.code}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="text-sm font-bold text-academic-navy/70">
+                        {b.class_level ? `Grade ${b.class_level}` : '—'}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <Badge className="bg-academic-blue/5 text-academic-blue border-academic-blue/10 font-bold uppercase text-[10px] px-3 py-1">
+                        {b.stream ?? 'GENERAL'}
+                      </Badge>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="text-sm font-semibold text-academic-navy/60">{b.academic_year?.label ?? '—'}</div>
+                    </td>
+                    <td className="px-8 py-6 text-center">
                       {b.is_active ? (
-                        <Badge variant="success">Active</Badge>
+                        <Badge variant="success" className="bg-emerald-100 text-emerald-700 border-emerald-200 font-bold uppercase text-[10px] px-4 py-1.5 rounded-full">Active</Badge>
                       ) : (
-                        <Badge>Inactive</Badge>
+                        <Badge className="bg-slate-100 text-slate-500 border-slate-200 font-bold uppercase text-[10px] px-4 py-1.5 rounded-full">Inactive</Badge>
                       )}
                     </td>
                   </tr>
@@ -132,22 +173,23 @@ export function BatchesPage() {
       <Modal 
         open={open} 
         onClose={() => setOpen(false)} 
-        title="Create Class / Batch"
+        title="Institutional Class Creation"
+        size="md"
       >
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleCreate} className="space-y-6 py-4">
           {isGlobalMode && (
-            <div>
-              <label className="label">College / School</label>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Affiliated Institution</label>
               <select
                 value={targetCollegeId}
                 onChange={(e) => {
                   setTargetCollegeId(e.target.value);
                   setAcademicYearId('');
                 }}
-                className="input"
+                className="input-premium w-full"
                 required
               >
-                <option value="">Select School...</option>
+                <option value="">Select Institution...</option>
                 {colleges?.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} ({c.code})
@@ -156,48 +198,52 @@ export function BatchesPage() {
               </select>
             </div>
           )}
-          <div>
-            <label className="label">Section name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="input"
-              placeholder="e.g. 11-PCMB-A"
-              required
-            />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Section Name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-premium w-full"
+                placeholder="e.g. 11-PCMB-A"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Unique Section Code</label>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                className="input-premium w-full font-mono font-bold"
+                placeholder="11-PCMB-A-24"
+                required
+              />
+            </div>
           </div>
-          <div>
-            <label className="label">Section code <span className="text-slate-400 font-normal">(unique per school)</span></label>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="input font-mono"
-              placeholder="11-PCMB-A-24"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Class Level</label>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Grade Level</label>
               <select
                 value={classLevel}
                 onChange={(e) => setClassLevel(Number(e.target.value) as ClassLevel)}
-                className="input"
+                className="input-premium w-full"
                 required
               >
                 {CLASS_LEVELS.map((level) => (
                   <option key={level} value={level}>
-                    Class {level}
+                    Grade {level}
                   </option>
                 ))}
               </select>
             </div>
-            <div>
-              <label className="label">Stream</label>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Academic Stream</label>
               <select
                 value={stream}
                 onChange={(e) => setStream(e.target.value as Stream)}
-                className="input"
+                className="input-premium w-full"
                 required
               >
                 {STREAMS.map((s) => (
@@ -208,15 +254,16 @@ export function BatchesPage() {
               </select>
             </div>
           </div>
-          <div>
-            <label className="label">Academic year</label>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Academic Calendar Cycle</label>
             <select
               value={academicYearId}
               onChange={(e) => setAcademicYearId(e.target.value)}
-              className="input"
+              className="input-premium w-full"
               required
             >
-              <option value="">Select…</option>
+              <option value="">Select Academic Year…</option>
               {years?.map((y) => (
                 <option key={y.id} value={y.id}>
                   {y.label} {y.is_current ? '(Current)' : ''}
@@ -224,12 +271,13 @@ export function BatchesPage() {
               ))}
             </select>
           </div>
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost">
-              Cancel
+
+          <div className="flex justify-end gap-3 pt-6">
+            <button type="button" onClick={() => setOpen(false)} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">
+              Discard
             </button>
-            <button type="submit" disabled={create.isPending} className="btn btn-primary">
-              {create.isPending ? 'Creating...' : 'Create'}
+            <button type="submit" disabled={create.isPending} className="btn-premium btn-primary px-10">
+              {create.isPending ? 'Registering...' : 'Confirm Registration'}
             </button>
           </div>
         </form>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { LogOut, User, Moon, Sun, Menu, GraduationCap, ChevronRight } from 'lucide-react';
+import { LogOut, User, Moon, Sun, Menu, GraduationCap, ChevronRight, ShieldCheck, Monitor } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useVerifiedChildren } from '@/hooks/useChildResults';
@@ -126,6 +126,28 @@ export function Topbar({ onMobileMenuClick }: TopbarProps) {
                 >
                   <GraduationCap className="h-4 w-4 text-indigo-500" />
                   Parent Portal
+                </Link>
+              )}
+
+              {profile?.role === 'admin' && location.pathname.startsWith('/parent') && (
+                <Link
+                  to="/admin/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center gap-3 rounded px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <ShieldCheck className="h-4 w-4 text-slate-900 dark:text-white" />
+                  Admin Dashboard
+                </Link>
+              )}
+
+              {profile?.role === 'faculty' && location.pathname.startsWith('/parent') && (
+                <Link
+                  to="/faculty/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center gap-3 rounded px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <Monitor className="h-4 w-4 text-slate-900 dark:text-white" />
+                  Faculty Dashboard
                 </Link>
               )}
               

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, BookOpen, CheckCircle2, XCircle, Target, Award, Calendar } from 'lucide-react';
+import { ArrowLeft, Trophy, BookOpen, CheckCircle2, XCircle, Target, Award, Calendar, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useVerifiedChildren, useChildTestDetail, useChildMarks } from '@/hooks/useChildResults';
 import { CardSkeleton } from '@/components/LoadingSkeleton';
@@ -62,13 +62,13 @@ export function TestDetailPage() {
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white"
+          className="group flex items-center gap-2 text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Return to Dashboard
         </button>
         <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900/5 dark:bg-white/5 border border-slate-900/10 dark:border-white/10">
           <Calendar className="h-3 w-3 text-slate-400" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+          <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">
             Published {formatDate(data.test.test_date)}
           </span>
         </div>
@@ -79,11 +79,11 @@ export function TestDetailPage() {
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2">
-                <Badge variant="outline" className="bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                <Badge variant="default" className="bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-none font-normal text-[10px] uppercase tracking-widest px-3 py-1">
                   {data.test.exam_category}
                 </Badge>
                 {data.test.is_locked && (
-                  <Badge variant="info" className="font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                  <Badge variant="info" className="font-normal text-[10px] uppercase tracking-widest px-3 py-1">
                     Verified Result
                   </Badge>
                 )}
@@ -101,17 +101,17 @@ export function TestDetailPage() {
 
           <div className="card border-none shadow-none bg-slate-50/50 dark:bg-slate-900/20 overflow-hidden">
             <div className="px-8 py-6 border-b border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900/40">
-               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Subject Breakdown</h3>
+               <h3 className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Subject Breakdown</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-separate border-spacing-0">
                 <thead>
                   <tr className="bg-slate-50/50 dark:bg-slate-900/50">
-                    <th className="px-8 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">Subject</th>
-                    <th className="px-8 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Marks</th>
-                    <th className="px-8 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Max</th>
-                    <th className="px-8 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Yield</th>
-                    <th className="px-8 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                    <th className="px-8 py-4 text-left text-[10px] font-normal uppercase tracking-widest text-slate-400">Subject</th>
+                    <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Marks</th>
+                    <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Max</th>
+                    <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Yield</th>
+                    <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -122,7 +122,7 @@ export function TestDetailPage() {
                     return (
                       <tr key={m.id} className="group hover:bg-white dark:hover:bg-slate-900 transition-colors">
                         <td className="px-8 py-6">
-                           <span className="text-sm font-medium text-slate-900 dark:text-white">{m.subject_name}</span>
+                           <span className="text-sm font-normal text-slate-900 dark:text-white">{m.subject_name}</span>
                         </td>
                         <td className="px-8 py-6 text-right tabular-nums">
                           <span className="text-sm font-light text-slate-600 dark:text-slate-400">
@@ -134,22 +134,22 @@ export function TestDetailPage() {
                         </td>
                         <td className="px-8 py-6 text-right">
                            {pct != null ? (
-                             <span className="text-sm font-medium text-slate-900 dark:text-white">{pct}%</span>
+                             <span className="text-sm font-normal text-slate-900 dark:text-white">{pct}%</span>
                            ) : (
                              <span className="text-sm text-slate-300">—</span>
                            )}
                         </td>
                         <td className="px-8 py-6 text-right">
                           {m.is_absent ? (
-                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest border border-amber-100 dark:border-amber-900/30">
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-normal uppercase tracking-widest border border-amber-100 dark:border-amber-900/30">
                               <XCircle className="h-3 w-3" /> Absent
                             </div>
                           ) : m.marks_obtained != null ? (
-                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-normal uppercase tracking-widest border border-emerald-500/20">
                               <CheckCircle2 className="h-3 w-3" /> Submitted
                             </div>
                           ) : (
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Pending</span>
+                            <span className="text-[10px] font-normal text-slate-300 uppercase tracking-widest">Pending</span>
                           )}
                         </td>
                       </tr>
@@ -165,13 +165,13 @@ export function TestDetailPage() {
            {data.ranking && (
              <div className="card p-8 border-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl shadow-slate-900/20 dark:shadow-none">
                 <div className="flex items-center justify-between mb-10">
-                   <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Global Index</div>
+                   <div className="text-[10px] font-normal uppercase tracking-[0.2em] opacity-60">Global Index</div>
                    <Trophy className="h-5 w-5 opacity-40" />
                 </div>
                 
                 <div className="space-y-1">
                    <div className="text-6xl font-light tracking-tighter">#{data.ranking.rank}</div>
-                   <div className="text-xs font-medium uppercase tracking-widest opacity-60">
+                   <div className="text-xs font-normal uppercase tracking-widest opacity-60">
                       Out of {data.ranking.total_students} participants
                    </div>
                 </div>
@@ -179,11 +179,11 @@ export function TestDetailPage() {
                 <div className="mt-12 pt-8 border-t border-white/10 dark:border-slate-900/10 space-y-8">
                    <div className="flex justify-between items-end">
                       <div>
-                         <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Yield Score</div>
+                         <div className="text-[10px] font-normal uppercase tracking-widest opacity-60 mb-2">Yield Score</div>
                          <div className="text-3xl font-light tracking-tight">{Number(data.ranking.percentage).toFixed(2)}%</div>
                       </div>
                       <div className="text-right">
-                         <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Total Points</div>
+                         <div className="text-[10px] font-normal uppercase tracking-widest opacity-60 mb-2">Total Points</div>
                          <div className="text-3xl font-light tracking-tight">
                             {Number(data.ranking.total_marks).toFixed(0)}
                             <span className="text-base opacity-40 ml-1">/ {Number(data.ranking.max_marks).toFixed(0)}</span>
@@ -199,7 +199,7 @@ export function TestDetailPage() {
                  <div className="w-10 h-10 rounded-md bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
                     <Target className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                  </div>
-                 <h3 className="text-sm font-medium text-slate-900 dark:text-white">Analysis Context</h3>
+                 <h3 className="text-sm font-normal text-slate-900 dark:text-white">Analysis Context</h3>
               </div>
               <p className="text-sm text-slate-500 font-light leading-relaxed">
                  This assessment evaluates fundamental concepts in {data.test.exam_category}. 
@@ -208,7 +208,7 @@ export function TestDetailPage() {
               <div className="pt-4">
                  <Link 
                    to="/parent/progress" 
-                   className="group flex items-center justify-between w-full p-4 rounded-md border border-slate-200 dark:border-slate-800 hover:border-slate-900 dark:hover:border-white transition-all text-[10px] font-black uppercase tracking-widest"
+                   className="group flex items-center justify-between w-full p-4 rounded-md border border-slate-200 dark:border-slate-800 hover:border-slate-900 dark:hover:border-white transition-all text-[10px] font-normal uppercase tracking-widest"
                  >
                     View Growth Trajectory
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

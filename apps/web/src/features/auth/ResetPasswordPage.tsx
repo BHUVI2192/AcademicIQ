@@ -49,7 +49,7 @@ export function ResetPasswordPage() {
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-md bg-slate-900 text-white shadow-lg shadow-slate-900/10">
             <Trophy className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-medium text-slate-900 dark:text-slate-100">Reset Password</h1>
+          <h1 className="text-2xl font-normal text-slate-900 dark:text-slate-100">Reset Password</h1>
           <p className="text-sm text-slate-500">Set your new password below</p>
         </div>
 

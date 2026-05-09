@@ -80,7 +80,7 @@ export function RankingsPage() {
         <div className="space-y-6">
           <Link 
             to={user?.role === 'admin' ? '/admin/tests' : '/faculty/tests'} 
-            className="group inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="group inline-flex items-center gap-2 text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
             Assessments Archive
@@ -89,7 +89,7 @@ export function RankingsPage() {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900/5 dark:bg-white/5 border border-slate-900/10 dark:border-white/10">
               <Trophy className="h-3 w-3 text-slate-900 dark:text-white" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">
+              <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-900 dark:text-white">
                 Competitive Rankings
               </span>
             </div>
@@ -98,7 +98,7 @@ export function RankingsPage() {
                 {test.title}
               </h1>
               <p className="max-w-xl text-lg text-slate-500 font-light leading-relaxed">
-                Metric distribution for cohort <span className="text-slate-900 dark:text-white font-medium">{batch?.name || "unassigned"}</span>.
+                Metric distribution for cohort <span className="text-slate-900 dark:text-white font-normal">{batch?.name || "unassigned"}</span>.
               </p>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function RankingsPage() {
               className="btn btn-primary px-8 shadow-xl shadow-slate-900/10 flex items-center gap-2"
             >
               <Send className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-widest font-black">Notify Guardians</span>
+              <span className="text-xs uppercase tracking-widest font-normal">Notify Guardians</span>
             </button>
           )}
         </div>
@@ -152,16 +152,16 @@ export function RankingsPage() {
               <thead>
                 <tr>
                   <th className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Competitive Rank</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Competitive Rank</span>
                   </th>
                   <th className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Student Identity</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Student Identity</span>
                   </th>
                   <th className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-right">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Raw Score</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Raw Score</span>
                   </th>
                   <th className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-right">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Performance Index</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Performance Index</span>
                   </th>
                 </tr>
               </thead>
@@ -184,32 +184,32 @@ export function RankingsPage() {
                           </div>
                         ) : (
                           <div className="w-8 h-8 flex items-center justify-center">
-                            <span className="text-xs font-black text-slate-300">#{r.rank}</span>
+                            <span className="text-xs font-normal text-slate-300">#{r.rank}</span>
                           </div>
                         )}
-                        <span className={`text-sm font-black tracking-tight ${r.rank <= 3 ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                        <span className={`text-sm font-normal tracking-tight ${r.rank <= 3 ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
                           {r.rank === 1 ? 'Elite I' : r.rank === 2 ? 'Elite II' : r.rank === 3 ? 'Elite III' : `Rank ${r.rank}`}
                         </span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-900 dark:text-white">{r.student?.full_name ?? 'Anonymous Student'}</span>
-                        <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">Roll: {r.student?.roll_number ?? '—'}</span>
+                        <span className="text-sm font-normal text-slate-900 dark:text-white">{r.student?.full_name ?? 'Anonymous Student'}</span>
+                        <span className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mt-0.5">Roll: {r.student?.roll_number ?? '—'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="inline-flex items-center gap-2">
-                         <span className="text-xs font-black tabular-nums text-slate-900 dark:text-white">
+                         <span className="text-xs font-normal tabular-nums text-slate-900 dark:text-white">
                            {Number(r.total_marks).toFixed(2)}
                          </span>
-                         <span className="text-[10px] font-medium text-slate-300 uppercase tracking-widest">/ {Number(r.max_marks).toFixed(0)}</span>
+                         <span className="text-[10px] font-normal text-slate-300 uppercase tracking-widest">/ {Number(r.max_marks).toFixed(0)}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900 text-white dark:bg-white dark:text-slate-900">
                         <Target className="h-3 w-3" />
-                        <span className="text-xs font-black tabular-nums">{Number(r.percentage).toFixed(2)}%</span>
+                        <span className="text-xs font-normal tabular-nums">{Number(r.percentage).toFixed(2)}%</span>
                       </div>
                     </td>
                   </tr>

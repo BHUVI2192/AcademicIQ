@@ -158,20 +158,36 @@ export function ParentsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-medium text-slate-900 dark:text-slate-100">Parents & Mapping</h1>
-          <p className="text-sm text-slate-500">Manage parent accounts organized by batch</p>
+    <div className="max-w-[1600px] mx-auto space-y-12 animate-fade-in pb-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-academic-yellow/10 border border-academic-yellow/20">
+            <Users className="h-3.5 w-3.5 text-academic-yellow" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-academic-yellow">
+              Family Relations
+            </span>
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-5xl font-bold tracking-tight text-academic-navy leading-tight">Parent Registry</h1>
+            <p className="max-w-xl text-lg text-muted-foreground font-medium leading-relaxed">
+              Manage parent accounts and their academic relationships with students across institutional batches.
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button onClick={handleRefresh} className="btn btn-ghost inline-flex items-center gap-2" title="Refresh Data">
-            <RefreshCcw className="h-4 w-4" />
-            <span className="hidden sm:inline">Refresh</span>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleRefresh} 
+            className="p-3 text-academic-navy/40 hover:text-academic-navy hover:bg-academic-navy/5 rounded-xl transition-all border border-academic-navy/5 shadow-sm" 
+            title="Refresh Registry"
+          >
+            <RefreshCcw className="h-5 w-5" />
           </button>
           {batchFilter && (
-            <button onClick={() => setBatchFilter('')} className="btn btn-ghost inline-flex items-center gap-1">
-              <ChevronLeft className="h-4 w-4" /> Back to Batches
+            <button 
+              onClick={() => setBatchFilter('')} 
+              className="px-6 py-3 text-sm font-bold text-academic-navy/60 hover:text-academic-navy transition-colors flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" /> All Batches
             </button>
           )}
           <button
@@ -180,16 +196,16 @@ export function ParentsPage() {
               setInitialRollNumber('');
               setCreateOpen(true);
             }}
-            className="btn btn-primary inline-flex items-center gap-2"
+            className="btn-premium btn-primary px-8 shadow-xl shadow-academic-blue/20"
           >
-            <Plus className="h-4 w-4" /> Add Parent
+            <Plus className="h-4 w-4 mr-2" /> Add Parent
           </button>
         </div>
       </div>
 
       {/* Batch Folder Grid */}
       {!batchFilter ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {(batches ?? []).map((b) => {
             const studentCount = (students ?? []).filter(s => s.batch_id === b.id).length;
             const linkedCount = (students ?? []).filter(s =>
@@ -199,109 +215,146 @@ export function ParentsPage() {
               <button
                 key={b.id}
                 onClick={() => setBatchFilter(b.id)}
-                className="card p-4 flex flex-col items-center justify-center gap-3 hover:border-slate-900 transition-all text-center group"
+                className="glass-card group p-8 flex flex-col items-start gap-6 border-none shadow-xl shadow-academic-navy/5 hover:translate-y-[-4px] transition-all text-left"
               >
-                <div className="p-3 bg-slate-50 dark:bg-slate-900/20 rounded-md group-hover:scale-110 transition-transform">
-                  <Folder className="h-8 w-8 text-slate-900 dark:text-white fill-slate-100 dark:fill-slate-900/40" />
+                <div className="h-14 w-14 rounded-2xl bg-academic-yellow/10 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                  <Folder className="h-7 w-7 text-academic-yellow fill-academic-yellow/20" />
                 </div>
-                <div>
-                  <h3 className="font-medium text-slate-900 dark:text-slate-100">{b.name}</h3>
-                  <p className="text-xs text-slate-500 mt-1">{studentCount} students</p>
-                  {linkedCount > 0 && (
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">{linkedCount} linked</p>
-                  )}
+                <div className="space-y-4 w-full">
+                  <div>
+                    <h3 className="text-xl font-bold text-academic-navy group-hover:text-academic-yellow transition-colors">{b.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge className="bg-academic-navy/[0.03] text-academic-navy/40 border-none font-bold uppercase text-[9px] px-2 py-0.5">
+                        Batch Folder
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-academic-navy/5">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-academic-navy/30">Total Students</p>
+                      <p className="text-sm font-bold text-academic-navy/60">{studentCount}</p>
+                    </div>
+                    {linkedCount > 0 && (
+                      <div className="text-right space-y-0.5">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500/50">Linked</p>
+                        <p className="text-sm font-bold text-emerald-600">{linkedCount}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </button>
             );
           })}
           {batches?.length === 0 && (
             <div className="col-span-full">
-              <EmptyState icon={Folder} title="No Batches Found" description="Create a batch first to organize students and parents." />
+              <EmptyState 
+                icon={Folder} 
+                title="No active batches found" 
+                description="Initialize your first academic cohort to start organizing parent-student relationships." 
+              />
             </div>
           )}
         </div>
       ) : (
-        <div className="card p-0">
+        <div className="glass-card overflow-hidden border-none shadow-2xl shadow-academic-navy/5 p-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {isLoading ? (
-            <div className="p-6"><TableSkeleton rows={4} cols={4} /></div>
+            <div className="p-12"><TableSkeleton rows={6} cols={4} /></div>
           ) : filteredStudents.length === 0 ? (
-            <EmptyState icon={Users} title="No students found in this batch" />
+            <div className="py-24">
+              <EmptyState icon={Users} title="Empty batch registry" description="No students have been added to this batch yet." />
+            </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="table-clean">
-                <thead>
+              <table className="w-full border-separate border-spacing-0">
+                <thead className="bg-academic-navy/[0.03]">
                   <tr>
-                    <th>Roll No.</th>
-                    <th>Student Name</th>
-                    <th>Linked Parents</th>
-                    <th>Actions</th>
+                    <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Institutional ID</span>
+                    </th>
+                    <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Student Name</span>
+                    </th>
+                    <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Associated Guardians</span>
+                    </th>
+                    <th className="px-8 py-6 text-right border-b border-academic-navy/5">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Action</span>
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-academic-navy/5">
                   {filteredStudents.map((s) => {
-                    // Use mappings from real-time data, not cached student join
                     const studentMappings = studentMappingMap.get(s.id) ?? [];
                     return (
-                      <tr key={s.id}>
-                        <td className="font-mono text-xs">{s.roll_number}</td>
-                        <td className="font-medium">{s.full_name}</td>
-                        <td>
+                      <tr key={s.id} className="group hover:bg-academic-navy/[0.01] transition-colors">
+                        <td className="px-8 py-6">
+                          <span className="inline-flex items-center px-2 py-1 rounded bg-academic-navy/[0.03] font-mono text-[11px] font-bold text-academic-navy/60 border border-academic-navy/5">
+                            {s.roll_number}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="font-bold text-academic-navy text-lg group-hover:text-academic-yellow transition-colors">
+                            {s.full_name}
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
                           {studentMappings.length === 0 ? (
-                            <span className="text-xs text-slate-400 italic">Not linked</span>
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/20">No active links</span>
                           ) : (
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-3">
                               {studentMappings.map((m: any) => (
                                 <div
                                   key={m.id}
-                                  className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1 text-xs dark:border-slate-700"
+                                  className="flex items-center gap-3 rounded-xl border border-academic-navy/5 bg-white px-3 py-2 shadow-sm transition-all hover:border-academic-yellow/30"
                                 >
-                                  <span className="font-medium">{m.parent?.full_name}</span>
-                                  {m.parent?.phone && (
-                                    <span className="text-slate-400 font-mono">{m.parent.phone}</span>
-                                  )}
-                                  {m.is_verified ? (
-                                    <Badge variant="success">Verified</Badge>
-                                  ) : (
-                                    <Badge variant="warning">Pending</Badge>
-                                  )}
-                                  <button
-                                    onClick={() =>
-                                      toggle.mutate(
-                                        { id: m.id, is_verified: !m.is_verified },
-                                        { onSuccess: () => toast.success('Updated') }
-                                      )
-                                    }
-                                    title={m.is_verified ? 'Unverify' : 'Verify'}
-                                    className="text-slate-400 hover:text-slate-700"
-                                  >
+                                  <div className="space-y-0.5">
+                                    <div className="text-xs font-bold text-academic-navy">{m.parent?.full_name}</div>
+                                    <div className="text-[10px] font-bold text-academic-navy/40 font-mono">{m.parent?.phone}</div>
+                                  </div>
+                                  
+                                  <div className="h-4 w-px bg-academic-navy/5" />
+                                  
+                                  <div className="flex items-center gap-1.5">
                                     {m.is_verified ? (
-                                      <ShieldOff className="h-3 w-3" />
+                                      <Badge className="bg-emerald-100 text-emerald-700 border-none font-bold uppercase text-[8px] px-2">Verified</Badge>
                                     ) : (
-                                      <ShieldCheck className="h-3 w-3" />
+                                      <Badge className="bg-amber-100 text-amber-700 border-none font-bold uppercase text-[8px] px-2">Pending</Badge>
                                     )}
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      unlink.mutate(m.id, {
-                                        onSuccess: () => toast.success('Unlinked'),
-                                      })
-                                    }
-                                    title="Unlink"
-                                    className="text-slate-400 hover:text-red-600"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </button>
+                                    
+                                    <button
+                                      onClick={() =>
+                                        toggle.mutate(
+                                          { id: m.id, is_verified: !m.is_verified },
+                                          { onSuccess: () => toast.success('Registry Updated') }
+                                        )
+                                      }
+                                      className="p-1.5 text-academic-navy/20 hover:text-academic-navy hover:bg-academic-navy/5 rounded-lg transition-all"
+                                    >
+                                      {m.is_verified ? <ShieldOff className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        unlink.mutate(m.id, {
+                                          onSuccess: () => toast.success('Association Terminated'),
+                                        })
+                                      }
+                                      className="p-1.5 text-rose-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           )}
                         </td>
-                        <td>
+                        <td className="px-8 py-6 text-right">
                           <button
                             onClick={() => openCreateForStudent(s)}
-                            className="btn btn-ghost inline-flex items-center gap-1 text-xs"
+                            className="px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-academic-blue hover:bg-academic-blue/5 rounded-lg transition-colors border border-academic-blue/10"
                           >
-                            <Plus className="h-3 w-3" /> Add Parent
+                            <Plus className="h-3.5 w-3.5 inline mr-1.5" /> Link Parent
                           </button>
                         </td>
                       </tr>
@@ -318,39 +371,45 @@ export function ParentsPage() {
       <Modal
         open={createOpen}
         onClose={resetForm}
-        title="Add Parent Account"
+        title="Family Account Registration"
+        size="md"
       >
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleCreate} className="space-y-6 py-4">
           {/* Selected student preview */}
           {selectedStudent && (
-            <div className="bg-slate-50 dark:bg-slate-900/20 border border-slate-100 dark:border-slate-900/30 p-3 rounded-lg flex items-center gap-3">
-              <div className="bg-slate-100 dark:bg-slate-900/40 p-2 rounded-md">
-                <GraduationCap className="h-4 w-4 text-slate-900 dark:text-white" />
+            <div className="bg-academic-navy/[0.02] border border-academic-navy/5 p-5 rounded-2xl flex items-center gap-4">
+              <div className="h-10 w-10 rounded-xl bg-academic-blue/10 flex items-center justify-center shrink-0">
+                <GraduationCap className="h-5 w-5 text-academic-blue" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-slate-500 font-medium">Linking parent to student</p>
-                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {selectedStudent.full_name} ({selectedStudent.roll_number})
+                <p className="text-[10px] font-bold uppercase tracking-widest text-academic-navy/30">Linking Account To</p>
+                <p className="text-base font-bold text-academic-navy">
+                  {selectedStudent.full_name} <span className="text-academic-navy/40 font-mono text-sm ml-2">[{selectedStudent.roll_number}]</span>
                 </p>
               </div>
             </div>
           )}
 
           {/* Temp password info */}
-          <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
-            The parent will receive a temporary password: <code className="font-mono font-medium">Parent@123</code>
+          <div className="rounded-xl bg-academic-yellow/10 border border-academic-yellow/20 p-4 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-academic-yellow/20 flex items-center justify-center shrink-0">
+              <RefreshCcw className="h-4 w-4 text-academic-yellow" />
+            </div>
+            <p className="text-xs font-bold text-academic-yellow-dark">
+              Initial platform access key: <code className="font-mono bg-white/50 px-2 py-0.5 rounded ml-1">Parent@123</code>
+            </p>
           </div>
 
           {isGlobalMode && (
-            <div>
-              <label className="label">College</label>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Academic Institution</label>
               <select
                 value={targetCollegeId}
                 onChange={(e) => setTargetCollegeId(e.target.value)}
-                className="input"
+                className="input-premium w-full"
                 required
               >
-                <option value="">Select College...</option>
+                <option value="">Select Institution...</option>
                 {colleges?.map((c) => (
                   <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
                 ))}
@@ -358,76 +417,80 @@ export function ParentsPage() {
             </div>
           )}
 
-          <div>
-            <label className="label">Full Name</label>
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Legal Full Name</label>
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="input"
-              placeholder="Parent's full name"
+              className="input-premium w-full"
+              placeholder="e.g. Robert Smith"
               required
             />
           </div>
 
-          {/* Phone — REQUIRED */}
-          <div>
-            <label className="label">
-              Phone Number <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">
+                Mobile Number <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-academic-navy/30" />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="input-premium w-full pl-11"
+                  placeholder="+91 00000 00000"
+                  required
+                />
+              </div>
+              <p className="text-[10px] font-bold text-academic-navy/30 uppercase tracking-tight ml-1">Includes primary login access</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Recovery Email <span className="opacity-40 font-normal ml-1">(Optional)</span></label>
               <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="input pl-10"
-                placeholder="+919876543210"
-                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-premium w-full"
+                placeholder="parent@domain.com"
               />
             </div>
-            <p className="mt-1 text-xs text-slate-500">Used for login. Include country code (+91).</p>
-          </div>
-
-          {/* Email — optional, for forgot password */}
-          <div>
-            <label className="label">Email <span className="text-xs font-normal text-slate-400">(optional, for password reset)</span></label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input"
-              placeholder="parent@example.com"
-            />
           </div>
 
           {/* Student Linking Section */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <h4 className="text-sm font-medium mb-2">Link to Student</h4>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div>
-                <label className="label">Batch / Section</label>
+          <div className="pt-6 border-t border-academic-navy/5">
+            <div className="inline-flex items-center gap-2 mb-4">
+              <div className="h-2 w-2 rounded-full bg-academic-blue" />
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.1em] text-academic-navy">Relationship Mapping</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-academic-navy/40 ml-1">Class / Section</label>
                 <select
                   value={initialBatchId}
                   onChange={(e) => {
                     setInitialBatchId(e.target.value);
                     setInitialRollNumber('');
                   }}
-                  className="input"
+                  className="input-premium w-full text-xs"
                 >
-                  <option value="">Any Batch...</option>
+                  <option value="">Global Search...</option>
                   {batches?.map((b) => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="label">Student Roll No.</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-academic-navy/40 ml-1">Student Roll No.</label>
                 <input
                   list="students-list-modal"
                   value={initialRollNumber}
                   onChange={(e) => setInitialRollNumber(e.target.value.toUpperCase())}
-                  className="input font-mono"
-                  placeholder="Search..."
+                  className="input-premium w-full font-mono font-bold text-xs"
+                  placeholder="ID Lookup..."
                 />
                 <datalist id="students-list-modal">
                   {students
@@ -437,12 +500,12 @@ export function ParentsPage() {
                     ))}
                 </datalist>
               </div>
-              <div>
-                <label className="label">Relationship</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-academic-navy/40 ml-1">Relationship</label>
                 <select
                   value={initialRelationship}
                   onChange={(e) => setInitialRelationship(e.target.value)}
-                  className="input"
+                  className="input-premium w-full text-xs font-bold"
                 >
                   <option value="father">Father</option>
                   <option value="mother">Mother</option>
@@ -452,10 +515,10 @@ export function ParentsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={resetForm} className="btn btn-ghost">Cancel</button>
-            <button type="submit" disabled={creating} className="btn btn-primary">
-              {creating ? 'Creating...' : 'Create & Link'}
+          <div className="flex justify-end gap-3 pt-6">
+            <button type="button" onClick={resetForm} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">Discard</button>
+            <button type="submit" disabled={creating} className="btn-premium btn-primary px-10">
+              {creating ? 'Processing...' : 'Confirm Registration'}
             </button>
           </div>
         </form>

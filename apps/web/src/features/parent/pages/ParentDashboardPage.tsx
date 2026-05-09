@@ -74,6 +74,8 @@ const EXAM_FOLDERS: ExamFolder[] = [
   },
 ];
 
+const COMPETITIVE_KEYS = ['kcet', 'jee_mains', 'jee_advanced', 'neet'];
+
 export function ParentDashboardPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -82,6 +84,7 @@ export function ParentDashboardPage() {
     () => sessionStorage.getItem('aiq.selectedChildId')
   );
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [activeSubFolder, setActiveSubFolder] = useState<string | null>(null);
 
   useEffect(() => {
     if (lsChildren) return;
@@ -119,8 +122,12 @@ export function ParentDashboardPage() {
     return groups;
   }, [rankings]);
 
-  const activeFolderData = EXAM_FOLDERS.find(f => f.key === activeFolder);
-  const activeFolderRankings = activeFolder ? (folderGroups[activeFolder] ?? []) : [];
+  const activeFolderData = EXAM_FOLDERS.find(f => f.key === (activeSubFolder || activeFolder));
+  const activeFolderRankings = (activeSubFolder || activeFolder) ? (folderGroups[activeSubFolder || activeFolder!] ?? []) : [];
+
+  const competitiveCount = COMPETITIVE_KEYS.reduce((acc, key) => acc + (folderGroups[key]?.length ?? 0), 0);
+  const boardCount = folderGroups['board']?.length ?? 0;
+  const practiceCount = folderGroups['practice']?.length ?? 0;
 
   const latest = rankings?.[0];
   const avgPct =
@@ -301,7 +308,7 @@ export function ParentDashboardPage() {
 
               {lsRanks ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[1, 2, 3, 4].map((i) => <div key={i} className="h-40 w-full animate-pulse rounded-md bg-slate-100 dark:bg-white/5" />)}
+                  {[1, 2].map((i) => <div key={i} className="h-48 w-full animate-pulse rounded-md bg-slate-100 dark:bg-white/5" />)}
                 </div>
               ) : Object.keys(folderGroups).length === 0 ? (
                 <div className="card p-20 flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-200 dark:border-slate-800">
@@ -314,107 +321,209 @@ export function ParentDashboardPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {EXAM_FOLDERS.filter(f => folderGroups[f.key]?.length > 0).map((folder) => {
-                    const folderRankings = folderGroups[folder.key] ?? [];
-                    const avgInFolder =
-                      folderRankings.reduce((acc, r) => acc + Number(r.percentage), 0) /
-                      folderRankings.length;
-                    const FolderIcon = folder.icon;
-                    return (
-                      <button
-                        key={folder.key}
-                        onClick={() => setActiveFolder(folder.key)}
-                        className={`group flex flex-col justify-between rounded-md border p-8 transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-sm hover:shadow-slate-200/50 dark:hover:shadow-none ${folder.bgColor}`}
-                      >
-                        <div className="flex items-center justify-between mb-8">
-                          <div className={`p-4 rounded-md bg-white dark:bg-black/20 shadow-sm transition-transform group-hover:scale-110`}>
-                            <FolderIcon className={`h-6 w-6 ${folder.color}`} />
-                          </div>
-                          <div className="text-right">
-                             <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Volume</span>
-                             <span className="text-sm font-medium text-slate-900 dark:text-white">
-                               {folderRankings.length} {folderRankings.length === 1 ? 'Test' : 'Tests'}
-                             </span>
-                          </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Board Exams Folder */}
+                  <button
+                    onClick={() => setActiveFolder('board')}
+                    className="group relative flex flex-col justify-between rounded-md border-0 p-10 transition-all hover:scale-[1.02] active:scale-[0.98] bg-amber-500/5 border-amber-500/10 dark:bg-amber-500/10 dark:border-amber-500/20 hover:shadow-2xl hover:shadow-amber-500/10"
+                  >
+                    <div className="flex items-center justify-between mb-12">
+                      <div className="p-5 rounded-md bg-white dark:bg-black/20 shadow-sm transition-transform group-hover:scale-110">
+                        <BookOpen className="h-8 w-8 text-amber-500" />
+                      </div>
+                      <div className="text-right">
+                         <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Status</span>
+                         <span className="text-sm font-medium text-amber-600">
+                           {boardCount} Records
+                         </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-light text-slate-900 dark:text-white mb-2">Board Exams</h3>
+                      <p className="text-sm text-slate-500 font-light mb-6">Official secondary and higher secondary certification results</p>
+                      <div className="flex items-center justify-between pt-6 border-t border-amber-500/10">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">View Folder</span>
+                        <ArrowRight className="h-5 w-5 text-amber-500 transition-transform group-hover:translate-x-2" />
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Competitive Exams Folder */}
+                  <button
+                    onClick={() => setActiveFolder('competitive')}
+                    className="group relative flex flex-col justify-between rounded-md border-0 p-10 transition-all hover:scale-[1.02] active:scale-[0.98] bg-blue-500/5 border-blue-500/10 dark:bg-blue-500/10 dark:border-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/10"
+                  >
+                    <div className="flex items-center justify-between mb-12">
+                      <div className="p-5 rounded-md bg-white dark:bg-black/20 shadow-sm transition-transform group-hover:scale-110">
+                        <GraduationCap className="h-8 w-8 text-blue-500" />
+                      </div>
+                      <div className="text-right">
+                         <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Entrance</span>
+                         <span className="text-sm font-medium text-blue-600">
+                           {competitiveCount} Records
+                         </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-light text-slate-900 dark:text-white mb-2">Competitive Exams</h3>
+                      <p className="text-sm text-slate-500 font-light mb-6">National and state-level entrance assessments (JEE, NEET, KCET)</p>
+                      <div className="flex items-center justify-between pt-6 border-t border-blue-500/10">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Explore Categories</span>
+                        <div className="flex -space-x-2">
+                           <div className="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-900/30 border-2 border-white dark:border-slate-900 flex items-center justify-center text-[8px] font-black text-blue-600">JEE</div>
+                           <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/30 border-2 border-white dark:border-slate-900 flex items-center justify-center text-[8px] font-black text-emerald-600">NEET</div>
+                           <div className="w-6 h-6 rounded-md bg-violet-100 dark:bg-violet-900/30 border-2 border-white dark:border-slate-900 flex items-center justify-center text-[8px] font-black text-violet-600">KCET</div>
                         </div>
-                        <div>
-                          <div className="text-2xl font-medium text-slate-900 dark:text-white mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">
-                            {folder.label}
-                          </div>
-                          <div className="flex items-end justify-between">
-                            <div>
-                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Aggregated Mean</div>
-                              <div className={`text-3xl font-light ${folder.color}`}>{avgInFolder.toFixed(1)}%</div>
-                            </div>
-                            <div className={`p-3 rounded-md ${folder.color} bg-white dark:bg-black/20 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1`}>
-                              <ArrowRight className="h-5 w-5" />
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Practice Tests (Optional/Subtle) */}
+                  {practiceCount > 0 && (
+                    <button
+                      onClick={() => setActiveFolder('practice')}
+                      className="md:col-span-2 group flex items-center justify-between p-6 rounded-md bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 transition-all hover:bg-slate-100 dark:hover:bg-white/10"
+                    >
+                      <div className="flex items-center gap-4">
+                        <FolderOpen className="h-5 w-5 text-slate-400" />
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400 uppercase tracking-widest">General Practice Assessments</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs font-mono text-slate-400">{practiceCount} items</span>
+                        <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           ) : (
             /* ─── Folder Detail View ─── */
-            <div className="space-y-8">
+            /* ─── Folder Navigation (Competitive or Results) ─── */
+            <div className="space-y-10">
               <div className="flex items-center justify-between">
                 <div className="space-y-4">
                   <button
-                    onClick={() => setActiveFolder(null)}
+                    onClick={() => {
+                      if (activeSubFolder) setActiveSubFolder(null);
+                      else setActiveFolder(null);
+                    }}
                     className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white"
                   >
-                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Segment Overview
+                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> 
+                    {activeSubFolder ? 'Competitive Segments' : 'Back to Dashboard'}
                   </button>
                   <div>
                     <h2 className="text-4xl font-light tracking-tight text-slate-900 dark:text-white leading-none">
-                      {activeFolderData?.label}
+                      {activeSubFolder 
+                        ? EXAM_FOLDERS.find(f => f.key === activeSubFolder)?.label 
+                        : activeFolder === 'competitive' ? 'Competitive Exams' : activeFolderData?.label}
                     </h2>
-                    <p className="text-sm text-slate-500 mt-2 font-light">Historical performance records and trends</p>
+                    <p className="text-sm text-slate-500 mt-2 font-light">
+                      {activeFolder === 'competitive' && !activeSubFolder 
+                        ? 'Select an entrance examination category to view specific results' 
+                        : 'Historical performance records and trends'}
+                    </p>
                   </div>
                 </div>
-                <div className={`p-6 rounded-md ${activeFolderData?.bgColor} border-0 shadow-sm`}>
-                  {activeFolderData && <activeFolderData.icon className={`h-8 w-8 ${activeFolderData.color}`} />}
+                <div className={`p-6 rounded-md ${activeFolderData?.bgColor || 'bg-blue-500/5'} border-0 shadow-sm`}>
+                  {activeSubFolder ? (
+                    (() => {
+                      const Icon = EXAM_FOLDERS.find(f => f.key === activeSubFolder)?.icon || FolderOpen;
+                      return <Icon className={`h-8 w-8 ${EXAM_FOLDERS.find(f => f.key === activeSubFolder)?.color}`} />;
+                    })()
+                  ) : activeFolder === 'competitive' ? (
+                    <GraduationCap className="h-8 w-8 text-blue-500" />
+                  ) : (
+                    activeFolderData && <activeFolderData.icon className={`h-8 w-8 ${activeFolderData.color}`} />
+                  )}
                 </div>
               </div>
 
-              <div className="grid gap-4">
-                {activeFolderRankings.map((r) => (
-                  <Link
-                    key={r.id}
-                    to={`/parent/tests/${r.test_id}`}
-                    className="card group flex items-center justify-between p-6 transition-all hover:bg-slate-900 dark:hover:bg-white hover:border-transparent hover:-translate-y-1 hover:shadow-sm hover:shadow-slate-900/10"
-                  >
-                    <div className="flex items-center gap-6">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-white/10 dark:group-hover:bg-slate-900/10 transition-colors">
-                        <BookOpen className="h-5 w-5 text-slate-500 group-hover:text-white dark:group-hover:text-slate-900" />
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="text-lg font-medium text-slate-900 dark:text-white group-hover:text-white dark:group-hover:text-slate-900 transition-colors">
-                          {r.test?.title}
+              {activeFolder === 'competitive' && !activeSubFolder ? (
+                /* Sub-folders for Competitive Exams */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {EXAM_FOLDERS.filter(f => COMPETITIVE_KEYS.includes(f.key)).map((folder) => {
+                    const folderRankings = folderGroups[folder.key] ?? [];
+                    const FolderIcon = folder.icon;
+                    const hasResults = folderRankings.length > 0;
+                    
+                    return (
+                      <button
+                        key={folder.key}
+                        disabled={!hasResults}
+                        onClick={() => setActiveSubFolder(folder.key)}
+                        className={`group flex items-center justify-between rounded-md border p-8 transition-all ${
+                          hasResults 
+                            ? `${folder.bgColor} hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg` 
+                            : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 opacity-60 grayscale'
+                        }`}
+                      >
+                        <div className="flex items-center gap-6">
+                          <div className={`p-4 rounded-md bg-white dark:bg-black/20 shadow-sm transition-transform ${hasResults && 'group-hover:scale-110'}`}>
+                            <FolderIcon className={`h-6 w-6 ${folder.color}`} />
+                          </div>
+                          <div className="text-left">
+                            <div className="text-xl font-medium text-slate-900 dark:text-white">
+                              {folder.label}
+                            </div>
+                            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
+                              {hasResults ? `${folderRankings.length} Assessment Records` : 'No Records Published'}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] group-hover:text-white/60 dark:group-hover:text-slate-900/60 transition-colors">
-                          {formatDate(r.test?.test_date)}
+                        {hasResults && (
+                          <div className={`p-2 rounded-md ${folder.color} bg-white dark:bg-black/20 transition-all group-hover:translate-x-1`}>
+                            <ArrowRight className="h-4 w-4" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* ─── Result List View ─── */
+                <div className="grid gap-4">
+                  {activeFolderRankings.length > 0 ? (
+                    activeFolderRankings.map((r) => (
+                      <Link
+                        key={r.id}
+                        to={`/parent/tests/${r.test_id}`}
+                        className="card group flex items-center justify-between p-6 transition-all hover:bg-slate-900 dark:hover:bg-white hover:border-transparent hover:-translate-y-1 hover:shadow-sm hover:shadow-slate-900/10"
+                      >
+                        <div className="flex items-center gap-6">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-white/10 dark:group-hover:bg-slate-900/10 transition-colors">
+                            <BookOpen className="h-5 w-5 text-slate-500 group-hover:text-white dark:group-hover:text-slate-900" />
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="text-lg font-medium text-slate-900 dark:text-white group-hover:text-white dark:group-hover:text-slate-900 transition-colors">
+                              {r.test?.title}
+                            </div>
+                            <div className="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] group-hover:text-white/60 dark:group-hover:text-slate-900/60 transition-colors">
+                              {formatDate(r.test?.test_date)}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                        <div className="flex items-center gap-8">
+                          <div className="text-right">
+                            <div className="text-2xl font-light text-slate-900 dark:text-white group-hover:text-white dark:group-hover:text-slate-900">
+                              {Number(r.percentage).toFixed(1)}%
+                            </div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 group-hover:text-white/60 dark:group-hover:text-slate-900/60">
+                              Rank #{r.rank}
+                            </div>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-slate-300 transition-transform group-hover:translate-x-2 group-hover:text-white dark:group-hover:text-slate-900" />
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center bg-slate-50 dark:bg-white/5 rounded-md border border-dashed border-slate-200 dark:border-white/10">
+                      <p className="text-slate-400 font-light">No assessment data available for this category yet.</p>
                     </div>
-                    <div className="flex items-center gap-8">
-                      <div className="text-right">
-                        <div className="text-2xl font-light text-slate-900 dark:text-white group-hover:text-white dark:group-hover:text-slate-900">
-                          {Number(r.percentage).toFixed(1)}%
-                        </div>
-                        <div className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 group-hover:text-white/60 dark:group-hover:text-slate-900/60">
-                          Rank #{r.rank}
-                        </div>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-slate-300 transition-transform group-hover:translate-x-2 group-hover:text-white dark:group-hover:text-slate-900" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

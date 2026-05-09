@@ -36,7 +36,7 @@ export function PendingVerificationPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
             <Clock className="h-6 w-6" />
           </div>
-          <h2 className="text-xl font-medium text-slate-900 dark:text-slate-100">
+          <h2 className="text-xl font-normal text-slate-900 dark:text-slate-100">
             Pending Verification
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">

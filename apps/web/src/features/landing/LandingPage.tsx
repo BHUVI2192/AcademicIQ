@@ -24,7 +24,6 @@ export function LandingPage() {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
             <Link to="/login" className="hover:text-slate-900 transition-colors">Faculty</Link>
             <Link to="/login" className="hover:text-slate-900 transition-colors">Parents</Link>
-            <Link to="/admin/login" className="hover:text-slate-900 transition-colors">Admin</Link>
             <Link to="/login" className="bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800 transition-colors">
               Sign In
             </Link>
@@ -54,9 +53,6 @@ export function LandingPage() {
               Get Started
               <ArrowRight className="h-5 w-5" />
             </Link>
-            <Link to="/admin/login" className="w-full sm:w-auto bg-white text-slate-900 border border-slate-200 px-8 py-4 rounded-md font-medium text-lg hover:bg-slate-50 transition-all text-center">
-              Admin Console
-            </Link>
           </div>
         </div>
       </main>
@@ -68,22 +64,7 @@ export function LandingPage() {
             <h2 className="text-sm font-medium text-slate-400 uppercase tracking-[0.2em]">The Platform</h2>
             <p className="text-3xl md:text-4xl font-medium text-slate-900">Built for every stakeholder.</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Admin */}
-            <div className="bg-white p-8 border border-slate-200 rounded-md shadow-sm hover:border-slate-300 transition-colors">
-              <div className="w-12 h-12 bg-slate-900 rounded-md flex items-center justify-center mb-6">
-                <Command className="text-white h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-4">Institutional Admin</h3>
-              <p className="text-slate-500 mb-6 text-sm leading-relaxed">
-                Full control over departments, batches, and faculty. Manage institutional architecture with precise tools.
-              </p>
-              <Link to="/admin/login" className="text-sm font-medium text-slate-900 flex items-center gap-1 hover:gap-2 transition-all">
-                Access Admin <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* Faculty */}
             <div className="bg-white p-8 border border-slate-200 rounded-md shadow-sm hover:border-slate-300 transition-colors">
               <div className="w-12 h-12 bg-slate-100 dark:bg-slate-900 rounded-md flex items-center justify-center mb-6">
@@ -126,7 +107,6 @@ export function LandingPage() {
           <div className="flex gap-8 text-sm text-slate-500">
             <Link to="/login" className="hover:text-slate-900 transition-colors">Faculty Login</Link>
             <Link to="/login" className="hover:text-slate-900 transition-colors">Parent Portal</Link>
-            <Link to="/admin/login" className="hover:text-slate-900 transition-colors">Admin Console</Link>
           </div>
 
           <p className="text-xs text-slate-400 font-medium">

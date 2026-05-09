@@ -56,81 +56,81 @@ export function ReportsPage() {
   return (
     <div className="space-y-12 animate-fade-in pb-20">
       <div className="space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900/5 dark:bg-white/5 border border-slate-900/10 dark:border-white/10">
-          <FileText className="h-3 w-3 text-slate-900 dark:text-white" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[hsl(var(--primary)/0.05)] border border-[hsl(var(--primary)/0.1)]">
+          <FileText className="h-3 w-3 text-[hsl(var(--primary))]" />
+          <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-[hsl(var(--primary))]">
             Document Repository
           </span>
         </div>
         <div className="space-y-2">
           <h1 className="text-5xl font-light tracking-tight text-slate-900 dark:text-white">Academic Reports</h1>
           <p className="text-slate-500 dark:text-slate-400 max-w-xl text-lg font-light">
-            Comprehensive performance analysis and term-wise progress reports for <span className="text-slate-900 dark:text-white font-medium underline decoration-slate-200 underline-offset-4">{child.full_name}</span>.
+            Comprehensive performance analysis and term-wise progress reports for <span className="text-slate-900 dark:text-white font-normal underline decoration-slate-200 underline-offset-4">{child.full_name}</span>.
           </p>
         </div>
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
         {/* Term End Report */}
-        <div className="card group p-8 flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none border-none">
+        <div className="glass-card group p-8 flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-2xl border-none">
           <div className="space-y-6">
-            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 rounded-md flex items-center justify-center transition-transform group-hover:scale-110">
+            <div className="w-14 h-14 bg-[hsl(var(--primary)/0.05)] text-[hsl(var(--primary))] border border-[hsl(var(--primary)/0.1)] rounded-md flex items-center justify-center transition-transform group-hover:scale-110">
               <ClipboardList className="h-7 w-7" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-medium text-slate-900 dark:text-slate-100">Term Summary</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-light">Full breakdown of semester performance and aggregated results.</p>
+              <h3 className="text-xl font-normal text-[hsl(var(--text-main))]">Term Summary</h3>
+              <p className="text-sm text-[hsl(var(--text-muted))] leading-relaxed font-light">Full breakdown of semester performance and aggregated results.</p>
             </div>
           </div>
           <button 
             disabled={!rankings?.length}
-            className="group mt-8 flex items-center justify-between w-full p-4 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale"
+            className="group mt-8 flex items-center justify-between w-full p-4 rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] transition-all active:scale-[0.98] disabled:opacity-50"
           >
-            <span className="text-[10px] font-black uppercase tracking-widest">Generate Report</span>
+            <span className="text-[10px] font-normal uppercase tracking-widest">Generate Report</span>
             <Download className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
           </button>
         </div>
 
         {/* Progress Analysis */}
-        <div className="card group p-8 flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none border-none">
+        <div className="glass-card group p-8 flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-2xl border-none">
           <div className="space-y-6">
-            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 rounded-md flex items-center justify-center transition-transform group-hover:scale-110">
+            <div className="w-14 h-14 bg-[hsl(var(--accent)/0.05)] text-[hsl(var(--accent))] border border-[hsl(var(--accent)/0.1)] rounded-md flex items-center justify-center transition-transform group-hover:scale-110">
               <TrendingUp className="h-7 w-7" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-medium text-slate-900 dark:text-slate-100">Progress Analysis</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-light">Longitudinal trend analysis of subject-wise accuracy and growth.</p>
+              <h3 className="text-xl font-normal text-[hsl(var(--text-main))]">Progress Analysis</h3>
+              <p className="text-sm text-[hsl(var(--text-muted))] leading-relaxed font-light">Longitudinal trend analysis of subject-wise accuracy and growth.</p>
             </div>
           </div>
           <button 
             onClick={() => navigate('/parent/progress')}
-            className="group mt-8 flex items-center justify-between w-full p-4 rounded-md border border-slate-200 dark:border-slate-800 hover:border-slate-900 dark:hover:border-white transition-all active:scale-[0.98]"
+            className="group mt-8 flex items-center justify-between w-full p-4 rounded-md border border-[hsl(var(--card-border))] hover:border-[hsl(var(--primary))] transition-all active:scale-[0.98]"
           >
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white">View Trajectory</span>
-            <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-slate-900 dark:group-hover:text-white" />
+            <span className="text-[10px] font-normal uppercase tracking-widest text-[hsl(var(--text-muted))] group-hover:text-[hsl(var(--text-main))]">View Trajectory</span>
+            <ArrowRight className="h-4 w-4 text-[hsl(var(--text-muted))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--text-main))]" />
           </button>
         </div>
 
         {/* Weekly Summary */}
-        <div className="card group p-8 flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none border-none">
+        <div className="glass-card group p-8 flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-2xl border-none">
           <div className="space-y-6">
-            <div className="w-14 h-14 bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 rounded-md flex items-center justify-center transition-transform group-hover:scale-110">
+            <div className="w-14 h-14 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-md flex items-center justify-center transition-transform group-hover:scale-110">
               <Calendar className="h-7 w-7" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-medium text-slate-900 dark:text-slate-100">Weekly Performance</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-light">Snapshot of academic activity and performance in the last 7 days.</p>
+              <h3 className="text-xl font-normal text-[hsl(var(--text-main))]">Weekly Performance</h3>
+              <p className="text-sm text-[hsl(var(--text-muted))] leading-relaxed font-light">Snapshot of academic activity and performance in the last 7 days.</p>
             </div>
           </div>
-          <div className="mt-8 p-4 rounded-md bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5">
+          <div className="mt-8 p-4 rounded-md bg-[hsl(var(--bg-main)/0.3)] border border-[hsl(var(--card-border)/0.2)]">
              <div className="flex justify-between items-end">
                 <div>
-                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Tests</div>
-                   <div className="text-2xl font-light text-slate-900 dark:text-white">{weeklyTests.length}</div>
+                   <div className="text-[10px] font-normal text-[hsl(var(--text-muted))] uppercase tracking-widest">Active Tests</div>
+                   <div className="text-2xl font-light text-[hsl(var(--text-main))]">{weeklyTests.length}</div>
                 </div>
                 <div className="text-right">
-                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg. Score</div>
-                   <div className="text-2xl font-light text-slate-900 dark:text-white">
+                   <div className="text-[10px] font-normal text-[hsl(var(--text-muted))] uppercase tracking-widest">Avg. Score</div>
+                   <div className="text-2xl font-light text-[hsl(var(--text-main))]">
                       {weeklyTests.length > 0 
                         ? (weeklyTests.reduce((acc, curr) => acc + Number(curr.percentage), 0) / weeklyTests.length).toFixed(1)
                         : '—'}%
@@ -141,14 +141,14 @@ export function ReportsPage() {
         </div>
       </div>
 
-      <div className="card border-none shadow-none bg-slate-50/50 dark:bg-slate-900/20 p-20 text-center">
+      <div className="glass-card border-none shadow-none bg-transparent p-20 text-center">
          <div className="max-w-md mx-auto space-y-6">
-            <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-md shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-center mx-auto transition-transform hover:rotate-6">
-               <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+            <div className="w-20 h-20 bg-[hsl(var(--card-bg))] rounded-md shadow-sm border border-[hsl(var(--card-border)/0.5)] flex items-center justify-center mx-auto transition-transform hover:rotate-6">
+               <FileText className="h-10 w-10 text-[hsl(var(--text-muted)/0.3)]" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-light tracking-tight text-slate-900 dark:text-slate-100">Analytical Archive</h2>
-              <p className="text-slate-500 dark:text-slate-400 font-light leading-relaxed">
+              <h2 className="text-2xl font-light tracking-tight text-[hsl(var(--text-main))]">Analytical Archive</h2>
+              <p className="text-[hsl(var(--text-muted))] font-light leading-relaxed">
                 As assessments are published, detailed PDF reports and granular performance archives will manifest here for your records.
               </p>
             </div>

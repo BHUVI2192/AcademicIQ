@@ -29,7 +29,7 @@ export function CollegeSelector() {
     <div className="mb-6 space-y-4 px-4">
       {/* College Selector */}
       <div>
-        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
+        <label className="mb-1 block text-[10px] font-normal uppercase tracking-wider text-slate-400">
           Active Institution
         </label>
         <div className="group relative">
@@ -39,7 +39,7 @@ export function CollegeSelector() {
               setSelectedCollegeId(e.target.value || null);
               setSelectedAcademicYearId(null); // Reset year when college changes
             }}
-            className="w-full cursor-pointer appearance-none rounded-md border border-slate-200 bg-white py-2 pl-10 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+            className="w-full cursor-pointer appearance-none rounded-md border border-slate-200 bg-white py-2 pl-10 pr-10 text-sm font-normal text-slate-700 shadow-sm transition-all hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
           >
             <option value="">Select College...</option>
             {colleges?.map((c) => (
@@ -60,14 +60,14 @@ export function CollegeSelector() {
       {/* Academic Year Selector (only if college selected) */}
       {selectedCollegeId && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
+          <label className="mb-1 block text-[10px] font-normal uppercase tracking-wider text-slate-400">
             Academic Session
           </label>
           <div className="group relative">
             <select
               value={selectedAcademicYearId || ''}
               onChange={(e) => setSelectedAcademicYearId(e.target.value || null)}
-              className="w-full cursor-pointer appearance-none rounded-md border border-slate-200 bg-white py-2 pl-10 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              className="w-full cursor-pointer appearance-none rounded-md border border-slate-200 bg-white py-2 pl-10 pr-10 text-sm font-normal text-slate-700 shadow-sm transition-all hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
               <option value="">Select Year...</option>
               {years?.map((y) => (
@@ -87,7 +87,7 @@ export function CollegeSelector() {
       )}
 
       {!selectedCollegeId && (
-        <p className="mt-1 animate-pulse text-[10px] font-medium text-amber-500">
+        <p className="mt-1 animate-pulse text-[10px] font-normal text-amber-500">
           Please select a college to manage data
         </p>
       )}

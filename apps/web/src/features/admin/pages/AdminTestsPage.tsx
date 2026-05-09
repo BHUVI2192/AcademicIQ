@@ -164,7 +164,7 @@ export function AdminTestsPage() {
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900/5 dark:bg-white/5 border border-slate-900/10 dark:border-white/10">
             <ClipboardList className="h-3 w-3 text-slate-900 dark:text-white" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">
+            <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-900 dark:text-white">
               Assessment Engine
             </span>
           </div>
@@ -198,25 +198,25 @@ export function AdminTestsPage() {
         <div className="flex items-center gap-2 bg-white dark:bg-slate-950 p-1.5 rounded-md border border-slate-100 dark:border-slate-800 shadow-sm">
           <button 
             onClick={() => setStatusFilter('all')}
-            className={`px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`px-6 py-2.5 rounded-md text-[10px] font-normal uppercase tracking-widest transition-all ${statusFilter === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             All
           </button>
           <button 
             onClick={() => setStatusFilter('draft')}
-            className={`px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === 'draft' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`px-6 py-2.5 rounded-md text-[10px] font-normal uppercase tracking-widest transition-all ${statusFilter === 'draft' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             Drafts
           </button>
           <button 
             onClick={() => setStatusFilter('published')}
-            className={`px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === 'published' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`px-6 py-2.5 rounded-md text-[10px] font-normal uppercase tracking-widest transition-all ${statusFilter === 'published' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             Live
           </button>
           <button 
             onClick={() => setStatusFilter('locked')}
-            className={`px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === 'locked' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`px-6 py-2.5 rounded-md text-[10px] font-normal uppercase tracking-widest transition-all ${statusFilter === 'locked' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             Locked
           </button>
@@ -256,22 +256,22 @@ export function AdminTestsPage() {
               <thead>
                 <tr>
                   <th className="sticky top-0 bg-white dark:bg-slate-950/80 px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Assessment Title</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Assessment Title</span>
                   </th>
                   <th className="sticky top-0 bg-white dark:bg-slate-950/80 px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Framework</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Framework</span>
                   </th>
                   <th className="sticky top-0 bg-white dark:bg-slate-950/80 px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-left">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Target Cohort</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Target Cohort</span>
                   </th>
                   <th className="sticky top-0 bg-white dark:bg-slate-950/80 backdrop-blur-xl px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-center">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Execution Date</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Execution Date</span>
                   </th>
                   <th className="sticky top-0 bg-white dark:bg-slate-950/80 backdrop-blur-xl px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-center">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Status</span>
                   </th>
                   <th className="sticky top-0 bg-white dark:bg-slate-950/80 backdrop-blur-xl px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-right">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Actions</span>
+                    <span className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Actions</span>
                   </th>
                 </tr>
               </thead>
@@ -280,35 +280,35 @@ export function AdminTestsPage() {
                   <tr key={t.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                     <td className="px-8 py-5">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-slate-600 transition-colors">{t.title}</span>
-                        <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">ID: {t.id.split('-')[0]}</span>
+                        <span className="text-sm font-normal text-slate-900 dark:text-white group-hover:text-slate-600 transition-colors">{t.title}</span>
+                        <span className="text-[9px] font-normal text-slate-400 uppercase tracking-widest mt-0.5">ID: {t.id.split('-')[0]}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wider">{EXAM_CATEGORY_LABELS[t.exam_category as ExamCategory] || t.exam_category}</span>
-                        {t.exam_sub_type && <span className="text-[10px] text-slate-400 font-medium">{t.exam_sub_type}</span>}
+                        <span className="text-[11px] font-normal text-slate-600 dark:text-slate-300 uppercase tracking-wider">{EXAM_CATEGORY_LABELS[t.exam_category as ExamCategory] || t.exam_category}</span>
+                        {t.exam_sub_type && <span className="text-[10px] text-slate-400 font-normal">{t.exam_sub_type}</span>}
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-widest">
+                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-normal text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                          {t.batch?.name ?? 'Unassigned'}
                        </div>
                     </td>
                     <td className="px-8 py-5 text-center">
-                       <span className="text-xs font-medium text-slate-500">{t.test_date ? formatDate(t.test_date) : '—'}</span>
+                       <span className="text-xs font-normal text-slate-500">{t.test_date ? formatDate(t.test_date) : '—'}</span>
                     </td>
                     <td className="px-8 py-5 text-center">
                       {t.is_locked ? (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[9px] font-black uppercase tracking-widest border border-indigo-500/20">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[9px] font-normal uppercase tracking-widest border border-indigo-500/20">
                           <Lock className="h-3 w-3" /> Locked
                         </div>
                       ) : t.is_published ? (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-normal uppercase tracking-widest border border-emerald-500/20">
                           <div className="w-1 h-1 rounded-md bg-emerald-500 animate-pulse" /> Live
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 text-[9px] font-black uppercase tracking-widest border border-transparent">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 text-[9px] font-normal uppercase tracking-widest border border-transparent">
                           Draft
                         </div>
                       )}
@@ -342,7 +342,7 @@ export function AdminTestsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {isGlobalMode && (
               <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Academic Entity</label>
+                <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Academic Entity</label>
                 <select 
                   value={targetCollegeId} 
                   onChange={(e) => {
@@ -361,18 +361,18 @@ export function AdminTestsPage() {
             )}
             
             <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Assessment Designation</label>
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Assessment Designation</label>
               <input 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
-                className="input-premium w-full text-lg font-medium" 
+                className="input-premium w-full text-lg font-normal" 
                 placeholder="e.g. KCET Preparatory - Mathematics Segment I" 
                 required 
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Target Cohort</label>
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Target Cohort</label>
               <div className="relative">
                 <Layers className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <select value={targetBatchId} onChange={(e) => setTargetBatchId(e.target.value)} className="input-premium w-full pl-12" required>
@@ -383,7 +383,7 @@ export function AdminTestsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Assessment Date</label>
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Assessment Date</label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input type="date" value={testDate} onChange={(e) => setTestDate(e.target.value)} className="input-premium w-full pl-12" required />
@@ -391,7 +391,7 @@ export function AdminTestsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Examination Category</label>
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Examination Category</label>
               <div className="relative">
                 <Target className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="input-premium w-full pl-12">
@@ -406,7 +406,7 @@ export function AdminTestsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Sub-type Descriptor</label>
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Sub-type Descriptor</label>
               <div className="relative">
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input value={subType} onChange={(e) => setSubType(e.target.value)} className="input-premium w-full pl-12" placeholder="e.g. Monthly, Revision" />
@@ -417,8 +417,8 @@ export function AdminTestsPage() {
           <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <label className="text-base font-medium text-slate-900 dark:text-white">Segment Architecture</label>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Define subjects, marks, and question volume</p>
+                <label className="text-base font-normal text-slate-900 dark:text-white">Segment Architecture</label>
+                <p className="text-[10px] font-normal uppercase tracking-widest text-slate-400">Define subjects, marks, and question volume</p>
               </div>
               <button type="button" onClick={() => setSubjects([...subjects, { name: '', maxMarks: 100, numQuestions: 0 }])} className="btn btn-secondary px-6 text-xs">
                 <Plus className="h-3 w-3" /> Add Segment
@@ -429,7 +429,7 @@ export function AdminTestsPage() {
               {subjects.map((s, idx) => (
                 <div key={idx} className="flex gap-4 items-end animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex-1 space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Subject Name</label>
+                    <label className="text-[9px] font-normal uppercase tracking-widest text-slate-400 ml-1">Subject Name</label>
                     <div className="relative">
                       <BookOpen className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input value={s.name} onChange={(e) => {
@@ -440,22 +440,22 @@ export function AdminTestsPage() {
                     </div>
                   </div>
                   <div className="w-28 space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Max Marks</label>
+                    <label className="text-[9px] font-normal uppercase tracking-widest text-slate-400 ml-1">Max Marks</label>
                     <input type="number" value={s.maxMarks} onChange={(e) => {
                       const news = [...subjects];
                       news[idx].maxMarks = parseInt(e.target.value);
                       setSubjects(news);
-                    }} className="input-premium w-full text-center font-medium" placeholder="100" required />
+                    }} className="input-premium w-full text-center font-normal" placeholder="100" required />
                   </div>
                   <div className="w-28 space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Questions</label>
+                    <label className="text-[9px] font-normal uppercase tracking-widest text-slate-400 ml-1">Questions</label>
                     <div className="relative">
                        <Clock className="absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
                        <input type="number" value={s.numQuestions} onChange={(e) => {
                          const news = [...subjects];
                          news[idx].numQuestions = parseInt(e.target.value);
                          setSubjects(news);
-                       }} className="input-premium w-full text-center pl-8 font-medium" placeholder="60" required />
+                       }} className="input-premium w-full text-center pl-8 font-normal" placeholder="60" required />
                     </div>
                   </div>
                   {subjects.length > 1 && (

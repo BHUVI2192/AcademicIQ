@@ -14,6 +14,9 @@ import {
   X,
   Menu,
   BookOpen,
+  BarChart3,
+  LineChart,
+  User,
 } from 'lucide-react';
 import type { Role } from '@shared';
 import { cn } from '@/lib/utils';
@@ -37,16 +40,18 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/audit', label: 'Audit Log', icon: ScrollText },
 ];
 
-const FACULTY_NAV: NavItem[] = [
-  { to: '/faculty/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/faculty/students', label: 'Students', icon: Users },
-  { to: '/faculty/tests', label: 'Tests', icon: ClipboardList },
+const FACULTY_NAV = [
+  { label: 'Dashboard', icon: LayoutDashboard, to: '/faculty/dashboard' },
+  { label: 'Analytics', icon: BarChart3, to: '/faculty/analytics' },
+  { label: 'Students', icon: Users, to: '/faculty/students' },
+  { label: 'Tests', icon: BookOpen, to: '/faculty/tests' },
 ];
 
-const PARENT_NAV: NavItem[] = [
-  { to: '/parent/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/parent/progress', label: 'Progress', icon: TrendingUp },
-  { to: '/parent/reports', label: 'Reports', icon: FileText },
+const PARENT_NAV = [
+  { label: 'Overview', icon: LayoutDashboard, to: '/parent/dashboard' },
+  { label: 'Performance', icon: LineChart, to: '/parent/progress' },
+  { label: 'Reports', icon: ClipboardList, to: '/parent/reports' },
+  { label: 'Profile', icon: User, to: '/parent/profile' },
 ];
 
 interface SidebarProps {

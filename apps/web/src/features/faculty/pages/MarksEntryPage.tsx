@@ -274,6 +274,7 @@ export function MarksEntryPage() {
       const t = setTimeout(() => setSavingIndicator('idle'), 1500);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [debounced.status]);
 
   const totalCells = (students?.length ?? 0) * subjects.length;
@@ -355,8 +356,8 @@ export function MarksEntryPage() {
 
         if (!absent) {
           if (sub && sub.num_questions > 0) {
-            att = parseInt(r.num_attempted ?? r.attempted ?? 0);
-            inc = parseInt(r.num_incorrect ?? r.incorrect ?? 0);
+            att = parseInt(String(r.num_attempted ?? r.attempted ?? 0));
+            inc = parseInt(String(r.num_incorrect ?? r.incorrect ?? 0));
             una = sub.num_questions - att;
             marks = calculateMarks(att, inc, sub.num_questions, sub.max_marks, test!.exam_category);
           } else {

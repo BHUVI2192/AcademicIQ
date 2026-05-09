@@ -38,32 +38,32 @@ export function AuditLogPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-medium text-slate-900 dark:text-slate-100">Audit Log</h1>
-        <p className="text-sm text-slate-500">Immutable activity history</p>
+        <h1 className="text-2xl font-light tracking-tight text-[hsl(var(--text-main))]">Audit Log</h1>
+        <p className="text-sm font-light text-[hsl(var(--text-muted))]">Immutable activity history repository</p>
       </div>
 
-      <div className="card">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div>
-            <label className="label">Action</label>
+      <div className="glass-card border-none">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-widest text-[hsl(var(--text-muted))] font-medium">Action Filter</label>
             <select
               value={action}
               onChange={(e) => {
                 setAction(e.target.value);
                 setPage(0);
               }}
-              className="input"
+              className="input bg-[hsl(var(--bg-main)/0.2)] border-[hsl(var(--card-border)/0.3)] text-[hsl(var(--text-main))] font-light"
             >
-              <option value="">All</option>
+              <option value="" className="bg-[hsl(var(--bg-main))]">All Activities</option>
               {COMMON_ACTIONS.map((a) => (
-                <option key={a} value={a}>
+                <option key={a} value={a} className="bg-[hsl(var(--bg-main))]">
                   {a}
                 </option>
               ))}
             </select>
           </div>
-          <div>
-            <label className="label">From</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-widest text-[hsl(var(--text-muted))] font-medium">From Date</label>
             <input
               type="date"
               value={fromDate}
@@ -71,11 +71,11 @@ export function AuditLogPage() {
                 setFromDate(e.target.value);
                 setPage(0);
               }}
-              className="input"
+              className="input bg-[hsl(var(--bg-main)/0.2)] border-[hsl(var(--card-border)/0.3)] text-[hsl(var(--text-main))] font-light"
             />
           </div>
-          <div>
-            <label className="label">To</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-widest text-[hsl(var(--text-muted))] font-medium">To Date</label>
             <input
               type="date"
               value={toDate}
@@ -83,13 +83,13 @@ export function AuditLogPage() {
                 setToDate(e.target.value);
                 setPage(0);
               }}
-              className="input"
+              className="input bg-[hsl(var(--bg-main)/0.2)] border-[hsl(var(--card-border)/0.3)] text-[hsl(var(--text-main))] font-light"
             />
           </div>
         </div>
       </div>
 
-      <div className="card p-0">
+      <div className="glass-card p-0 border-none">
         {isLoading ? (
           <div className="p-6">
             <TableSkeleton rows={6} cols={4} />
@@ -99,54 +99,56 @@ export function AuditLogPage() {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="table-clean">
+              <table className="w-full text-left">
                 <thead>
-                  <tr>
-                    <th>When</th>
-                    <th>Action</th>
-                    <th>Entity</th>
-                    <th>Actor</th>
+                  <tr className="border-b border-[hsl(var(--card-border)/0.3)]">
+                    <th className="px-6 py-4 text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--text-muted))] font-medium">When</th>
+                    <th className="px-6 py-4 text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--text-muted))] font-medium">Action</th>
+                    <th className="px-6 py-4 text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--text-muted))] font-medium">Entity</th>
+                    <th className="px-6 py-4 text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--text-muted))] font-medium">Actor</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-[hsl(var(--card-border)/0.1)]">
                   {data.rows.map((r) => (
-                    <tr key={r.id}>
-                      <td className="text-slate-500">{formatDateTime(r.created_at)}</td>
-                      <td>
-                        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono dark:bg-slate-800">
+                    <tr key={r.id} className="group hover:bg-[hsl(var(--primary)/0.02)] transition-colors">
+                      <td className="px-6 py-4 text-sm font-light text-[hsl(var(--text-muted))] whitespace-nowrap">{formatDateTime(r.created_at)}</td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[hsl(var(--primary)/0.05)] border border-[hsl(var(--primary)/0.1)] text-[10px] font-mono text-[hsl(var(--primary))] uppercase tracking-tight">
                           {r.action}
                         </span>
                       </td>
-                      <td className="text-slate-500">
+                      <td className="px-6 py-4 text-sm font-light text-[hsl(var(--text-main))]">
                         {r.entity_type ?? '—'}{' '}
                         {r.entity_id && (
-                          <span className="text-xs">({String(r.entity_id).slice(0, 8)}…)</span>
+                          <span className="text-xs text-[hsl(var(--text-muted))]">({String(r.entity_id).slice(0, 8)}…)</span>
                         )}
                       </td>
-                      <td className="font-mono text-xs text-slate-500">
-                        {String(r.actor_id).slice(0, 8)}…
+                      <td className="px-6 py-4">
+                         <code className="text-xs font-mono text-[hsl(var(--text-muted))] opacity-60 group-hover:opacity-100 transition-opacity">
+                           {String(r.actor_id).slice(0, 8)}…
+                         </code>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm dark:border-slate-700">
-              <span className="text-slate-500">
-                {data.total} total · Page {page + 1} of {totalPages}
+            <div className="flex items-center justify-between border-t border-[hsl(var(--card-border)/0.3)] px-6 py-4 text-sm">
+              <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--text-muted))] font-light">
+                {data.total} total activities · Page {page + 1} of {totalPages}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-4">
                 <button
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="btn btn-ghost text-xs disabled:opacity-40"
+                  className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[hsl(var(--text-main))] hover:text-[hsl(var(--primary))] transition-colors disabled:opacity-20"
                 >
-                  <ChevronLeft className="h-3 w-3" /> Prev
+                  <ChevronLeft className="h-3 w-3" /> Previous
                 </button>
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page + 1 >= totalPages}
-                  className="btn btn-ghost text-xs disabled:opacity-40"
+                  className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[hsl(var(--text-main))] hover:text-[hsl(var(--primary))] transition-colors disabled:opacity-20"
                 >
                   Next <ChevronRight className="h-3 w-3" />
                 </button>

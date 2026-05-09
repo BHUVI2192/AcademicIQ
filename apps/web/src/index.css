@@ -10,6 +10,12 @@
   --card-border: 220 13% 91%;
   --text-main: 220 40% 10%;
   --text-muted: 220 14% 46%;
+
+  /* Academic Palette */
+  --academic-navy: 222 47% 11%;
+  --academic-blue: 221 83% 53%;
+  --academic-cyan: 191 91% 36%;
+  --academic-yellow: 45 93% 47%;
 }
 
 .dark {
@@ -18,6 +24,12 @@
   --card-border: 217 33% 17%;
   --text-main: 210 40% 98%;
   --text-muted: 215 20% 65%;
+
+  /* Academic Palette Dark */
+  --academic-navy: 210 40% 98%;
+  --academic-blue: 217 91% 60%;
+  --academic-cyan: 191 91% 45%;
+  --academic-yellow: 45 93% 55%;
 }
 
 @layer base {

@@ -5,9 +5,15 @@ const config: Config = {
   darkMode: 'class',
   theme: {
     extend: {
-      colors: {},
+      colors: {
+        'academic-navy': 'hsl(var(--academic-navy))',
+        'academic-blue': 'hsl(var(--academic-blue))',
+        'academic-cyan': 'hsl(var(--academic-cyan))',
+        'academic-yellow': 'hsl(var(--academic-yellow))',
+        'academic-purple': 'hsl(var(--academic-purple))',
+      },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Montserrat', 'Outfit', 'Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
@@ -29,3 +35,4 @@ const config: Config = {
 };
 
 export default config;
+

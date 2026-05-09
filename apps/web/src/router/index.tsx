@@ -26,6 +26,7 @@ import { StudentsPage } from '@/features/faculty/pages/StudentsPage';
 import { TestsPage } from '@/features/faculty/pages/TestsPage';
 import { MarksEntryPage } from '@/features/faculty/pages/MarksEntryPage';
 import { RankingsPage } from '@/features/faculty/pages/RankingsPage';
+import { FacultyAnalyticsPage } from '@/features/faculty/pages/FacultyAnalyticsPage';
 
 import { ParentDashboardPage } from '@/features/parent/pages/ParentDashboardPage';
 import { ParentProfilePage } from '@/features/parent/pages/ParentProfilePage';
@@ -40,6 +41,7 @@ export function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/verify-otp" element={<OtpVerifyPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/analytics" element={<Navigate to="/faculty/analytics" replace />} />
 
       {/* Admin Login */}
       <Route path="/admin/login" element={<LoginPage isAdminView={true} />} />
@@ -103,6 +105,7 @@ export function AppRouter() {
         }
       >
         <Route index element={<Navigate to="/faculty/dashboard" replace />} />
+        <Route path="analytics" element={<FacultyAnalyticsPage />} />
         <Route path="dashboard" element={<FacultyDashboardPage />} />
         <Route path="students" element={<StudentsPage />} />
         <Route path="tests" element={<TestsPage />} />

@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="mb-4 flex justify-center">
               <AlertTriangle className="h-12 w-12 text-red-500" />
             </div>
-            <h2 className="mb-2 text-xl font-medium text-slate-900 dark:text-slate-100">
+            <h2 className="mb-2 text-xl font-normal text-slate-900 dark:text-slate-100">
               Something went wrong
             </h2>
             <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
