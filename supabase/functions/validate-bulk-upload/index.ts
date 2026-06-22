@@ -94,7 +94,7 @@ serve(async (req) => {
     // Verify caller has rights: admin in college OR faculty assigned to this batch
     const { data: profile, error: profileErr } = await admin
       .from('profiles')
-      .select('id, role, college_id, is_active')
+      .select('id, role, college_id, is_active, can_add_students')
       .eq('id', actorId)
       .single();
 
@@ -122,6 +122,11 @@ serve(async (req) => {
     if (!isGlobalAdmin && !isCollegeAdmin && !isCollegeFaculty) {
       console.warn('Forbidden access attempt:', { actorId, role: profile.role, callerCollege: profile.college_id, targetCollege: college_id });
       return json({ success: false, error: `Forbidden: You do not have permission to upload to college ${college_id}` }, 403);
+    }
+
+    if (isCollegeFaculty && !profile.can_add_students) {
+      console.warn(`Faculty ${actorId} does not have can_add_students permission`);
+      return json({ success: false, error: 'Forbidden: Faculty does not have permission to register students' }, 403);
     }
 
     // Faculty specific check: must be assigned to the batch

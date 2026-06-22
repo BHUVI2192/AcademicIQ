@@ -386,3 +386,187 @@ export function useSubmitFeesDraftToAdmin() {
     },
   });
 }
+
+/**
+ * Set a global fee amount for all active students in a batch
+ */
+export function useSetGlobalFeesDraft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      batch_id: string;
+      total_amount: number;
+      faculty_id: string;
+    }) => {
+      const { data, error } = await supabase.rpc('set_global_fees_draft', {
+        p_batch_id: input.batch_id,
+        p_total_amount: input.total_amount,
+        p_faculty_id: input.faculty_id,
+      });
+
+      if (error) throw error;
+      return data?.[0];
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['batch-fees-drafts', variables.batch_id] });
+      queryClient.invalidateQueries({ queryKey: ['batch-fees', variables.batch_id] });
+      toast.success('Global fees set successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to set global fees');
+    },
+  });
+}
+
+/**
+ * Submit all draft/rejected fees for a class to the admin
+ */
+export function useSubmitAllFeesDraftToAdmin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      batch_id: string;
+      faculty_id: string;
+    }) => {
+      const { data, error } = await supabase.rpc('submit_all_fees_draft_to_admin', {
+        p_batch_id: input.batch_id,
+        p_faculty_id: input.faculty_id,
+      });
+
+      if (error) throw error;
+      return data?.[0];
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['batch-fees-drafts', variables.batch_id] });
+      queryClient.invalidateQueries({ queryKey: ['batch-fees', variables.batch_id] });
+      toast.success('All draft fees submitted to admin');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to submit all draft fees');
+    },
+  });
+}
+
+/**
+ * Approve all submitted fee drafts (Admin)
+ */
+export function useApproveAllFeesDrafts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      admin_id: string;
+      remarks?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('approve_all_fees_drafts', {
+        p_admin_id: input.admin_id,
+        p_remarks: input.remarks || null,
+      });
+
+      if (error) throw error;
+      return data?.[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-fees-submissions'] });
+      toast.success('All submitted fees approved successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve all fees');
+    },
+  });
+}
+
+/**
+ * Publish all approved fee drafts to parents (Admin)
+ */
+export function usePublishAllFeesToParents() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      admin_id: string;
+      due_date?: string | null;
+    }) => {
+      const { data, error } = await supabase.rpc('publish_all_fees_to_parents', {
+        p_admin_id: input.admin_id,
+        p_due_date: input.due_date || null,
+      });
+
+      if (error) throw error;
+      return data?.[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-fees-submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-fees'] });
+      queryClient.invalidateQueries({ queryKey: ['parent-student-fees'] });
+      queryClient.invalidateQueries({ queryKey: ['parent-notifications'] });
+      toast.success('All approved fees published successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to publish all fees');
+    },
+  });
+}
+
+/**
+ * Approve all submitted fee drafts in a specific batch (Admin)
+ */
+export function useApproveBatchFees() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      batch_id: string;
+      admin_id: string;
+      remarks?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('approve_batch_fees_drafts', {
+        p_batch_id: input.batch_id,
+        p_admin_id: input.admin_id,
+        p_remarks: input.remarks || null,
+      });
+
+      if (error) throw error;
+      return data?.[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-fees-submissions'] });
+      toast.success('Class submitted fees approved successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve class fees');
+    },
+  });
+}
+
+/**
+ * Publish all approved fee drafts in a specific batch to parents (Admin)
+ */
+export function usePublishBatchFeesToParents() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      batch_id: string;
+      admin_id: string;
+      due_date?: string | null;
+    }) => {
+      const { data, error } = await supabase.rpc('publish_batch_fees_to_parents', {
+        p_batch_id: input.batch_id,
+        p_admin_id: input.admin_id,
+        p_due_date: input.due_date || null,
+      });
+
+      if (error) throw error;
+      return data?.[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-fees-submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-fees'] });
+      queryClient.invalidateQueries({ queryKey: ['parent-student-fees'] });
+      queryClient.invalidateQueries({ queryKey: ['parent-notifications'] });
+      toast.success('Class approved fees published successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to publish class fees');
+    },
+  });
+}
+
+

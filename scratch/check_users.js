@@ -1,40 +1,31 @@
+const { createClient } = require("@supabase/supabase-js");
+require('dotenv').config();
 
-const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
-dotenv.config();
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://tevtluhuznkovezjgohh.supabase.co";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
-if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    console.error('Missing env vars');
-    process.exit(1);
+async function main() {
+  console.log("=== Profiles list ===\n");
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, role, email');
+  profiles?.forEach(p => console.log(`  ${p.role} | ${p.email} | ${p.full_name} | ${p.id}`));
+
+  console.log("\n=== Batches list ===\n");
+  const { data: batches } = await supabase
+    .from('batches')
+    .select('id, name, faculty_id');
+  batches?.forEach(b => console.log(`  ${b.name} | faculty=${b.faculty_id} | id=${b.id}`));
+
+  console.log("\n=== Faculty assignments ===\n");
+  const { data: assignments } = await supabase
+    .from('batch_faculty_assignments')
+    .select('batch_id, faculty_id, is_primary');
+  assignments?.forEach(a => console.log(`  batch=${a.batch_id} faculty=${a.faculty_id} primary=${a.is_primary}`));
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-
-async function checkAdmins() {
-    console.log('--- Checking Auth Users ---');
-    const { data: { users }, error: authError } = await supabase.auth.admin.listUsers();
-    if (authError) {
-        console.error('Auth Error:', authError);
-    } else {
-        console.log(`Found ${users.length} users in Auth.`);
-        users.forEach(u => console.log(`- ${u.email} (${u.id})`));
-    }
-
-    console.log('\n--- Checking Profiles ---');
-    const { data: profiles, error: profError } = await supabase
-        .from('profiles')
-        .select('id, email, role, college_id')
-        .eq('role', 'admin');
-    
-    if (profError) {
-        console.error('Profile Error:', profError);
-    } else {
-        console.log(`Found ${profiles.length} Admin profiles.`);
-        profiles.forEach(p => console.log(`- ${p.email} (ID: ${p.id}, Role: ${p.role}, College: ${p.college_id})`));
-    }
-}
-
-checkAdmins();
+main().catch(console.error);

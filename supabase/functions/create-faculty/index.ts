@@ -277,11 +277,15 @@ Deno.serve(async (req) => {
       return json({ success: false, error: 'Invalid JSON body' }, 400);
     }
 
-    const { college_id, full_name, email, phone } = body as {
+    const { college_id, full_name, email, phone, subject, can_add_students, can_manage_fees, can_manage_attendance } = body as {
       college_id: string;
       full_name: string;
       email: string;
       phone?: string;
+      subject?: string;
+      can_add_students?: boolean;
+      can_manage_fees?: boolean;
+      can_manage_attendance?: boolean;
     };
 
     console.log(`Creating faculty: ${email} for college: ${college_id}`);
@@ -318,7 +322,7 @@ Deno.serve(async (req) => {
       console.log(`User found in profiles (ID: ${existingProfile.id}). Updating Auth...`);
       const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(existingProfile.id, {
         password: tempPassword,
-        user_metadata: { role: 'faculty', college_id, full_name: full_name.trim() },
+        user_metadata: { role: 'faculty', college_id, full_name: full_name.trim(), subject, can_add_students, can_manage_fees, can_manage_attendance },
         phone: phone ?? undefined,
       });
 
@@ -333,7 +337,7 @@ Deno.serve(async (req) => {
         email: emailClean,
         password: tempPassword,
         email_confirm: true,
-        user_metadata: { role: 'faculty', college_id, full_name: full_name.trim() },
+        user_metadata: { role: 'faculty', college_id, full_name: full_name.trim(), subject, can_add_students, can_manage_fees, can_manage_attendance },
         phone: phone ?? undefined,
       });
 
@@ -349,7 +353,7 @@ Deno.serve(async (req) => {
 
            const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(found.id, {
              password: tempPassword,
-             user_metadata: { role: 'faculty', college_id, full_name: full_name.trim() },
+             user_metadata: { role: 'faculty', college_id, full_name: full_name.trim(), subject, can_add_students, can_manage_fees, can_manage_attendance },
              phone: phone ?? undefined,
            });
            if (updateErr) return json({ success: false, error: 'Auth update failed for ghost user' }, 400);
@@ -378,6 +382,10 @@ Deno.serve(async (req) => {
       full_name: full_name.trim(),
       email: emailClean,
       phone: phone ?? null,
+      subject: subject ?? null,
+      can_add_students: !!can_add_students,
+      can_manage_fees: !!can_manage_fees,
+      can_manage_attendance: !!can_manage_attendance,
       is_active: true,
     }, { onConflict: 'id' });
 

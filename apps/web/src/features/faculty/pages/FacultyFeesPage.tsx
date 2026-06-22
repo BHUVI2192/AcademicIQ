@@ -5,7 +5,9 @@ import { useStudentsInBatch } from '@/hooks/useStudents';
 import {
   useBatchFeesDrafts,
   useSubmitFeesDraft,
-  useSubmitFeesDraftToAdmin
+  useSubmitFeesDraftToAdmin,
+  useSetGlobalFeesDraft,
+  useSubmitAllFeesDraftToAdmin
 } from '@/hooks/useFees';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -33,6 +35,7 @@ export function FacultyFeesPage() {
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, FeeEdit>>({});
   const [search, setSearch] = useState('');
+  const [globalFeeVal, setGlobalFeeVal] = useState<string>('');
 
   // Queries
   const { data: students, isLoading: studentsLoading } = useStudentsInBatch(selectedBatchId);
@@ -41,6 +44,8 @@ export function FacultyFeesPage() {
   // Mutations
   const submitDraft = useSubmitFeesDraft();
   const submitToAdmin = useSubmitFeesDraftToAdmin();
+  const setGlobalFee = useSetGlobalFeesDraft();
+  const submitAllToAdmin = useSubmitAllFeesDraftToAdmin();
 
   const selectedBatch = batches?.find(b => b.id === selectedBatchId);
 
@@ -112,6 +117,38 @@ export function FacultyFeesPage() {
     }
   };
 
+  const handleSetGlobalFee = async () => {
+    if (!selectedBatchId || !user?.id || !globalFeeVal.trim()) {
+      toast.error('Please enter a valid global fee amount');
+      return;
+    }
+    const amount = parseFloat(globalFeeVal);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid positive number');
+      return;
+    }
+    try {
+      await setGlobalFee.mutateAsync({
+        batch_id: selectedBatchId,
+        total_amount: amount,
+        faculty_id: user.id,
+      });
+      setGlobalFeeVal('');
+    } catch (err) {}
+  };
+
+  const handleSubmitAllToAdmin = async () => {
+    if (!selectedBatchId || !user?.id) return;
+    try {
+      await submitAllToAdmin.mutateAsync({
+        batch_id: selectedBatchId,
+        faculty_id: user.id,
+      });
+    } catch (err) {}
+  };
+
+  const draftsCount = mergedFees.filter(f => f.status === 'draft' || f.status === 'rejected').length;
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'published':
@@ -154,10 +191,11 @@ export function FacultyFeesPage() {
         </div>
       </div>
 
-      {/* Batch Selector */}
+      {/* Batch Selector & Bulk Actions */}
       <Card className="p-6">
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-end">
-          <div className="flex-1 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
+          {/* Class Selector */}
+          <div className="w-full">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 block">
               <Layers className="inline h-3 w-3 mr-1" /> Select Class
             </label>
@@ -180,6 +218,51 @@ export function FacultyFeesPage() {
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
             </div>
           </div>
+
+          {selectedBatchId && (
+            <>
+              {/* Global Fee Setter */}
+              <div className="w-full">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 block">
+                  <DollarSign className="inline h-3 w-3 mr-1" /> Set Global Fee (Class)
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      value={globalFeeVal}
+                      onChange={(e) => setGlobalFeeVal(e.target.value)}
+                      placeholder="e.g. 50000"
+                      className="input-premium w-full pl-8 py-3 text-sm"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSetGlobalFee}
+                    disabled={setGlobalFee.isPending || !globalFeeVal.trim()}
+                    className="btn btn-secondary px-4 py-3 text-sm flex items-center gap-1 font-medium whitespace-nowrap"
+                  >
+                    {setGlobalFee.isPending ? 'Applying...' : 'Apply Fee'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit All to Admin */}
+              <div className="w-full">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 block">
+                  <Send className="inline h-3 w-3 mr-1" /> Finalize Submission
+                </label>
+                <button
+                  onClick={handleSubmitAllToAdmin}
+                  disabled={submitAllToAdmin.isPending || draftsCount === 0}
+                  className="btn btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 font-semibold shadow-md disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:shadow-none"
+                >
+                  <Send className="h-4 w-4" />
+                  {submitAllToAdmin.isPending ? 'Submitting...' : `Submit All to Admin (${draftsCount})`}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </Card>
 
