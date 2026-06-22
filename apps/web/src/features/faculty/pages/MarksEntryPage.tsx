@@ -302,8 +302,16 @@ export function MarksEntryPage() {
     return undefined;
   }, [debounced.status]);
 
-  const totalCells = (students?.length ?? 0) * subjects.length;
-  const filledCells = (marks ?? []).filter((m) => m.marks_obtained != null || m.is_absent).length;
+  // For Board Exams, count only subjects this faculty can edit
+  const editableSubjects = subjects.filter((s) => canEditSubjectMarks(s));
+  const editableSubjectIds = new Set(editableSubjects.map((s) => s.id));
+  const effectiveSubjects = editableSubjects.length > 0 ? editableSubjects : subjects;
+  const effectiveSubjectIds = editableSubjects.length > 0 ? editableSubjectIds : new Set(subjects.map((s) => s.id));
+
+  const totalCells = (students?.length ?? 0) * effectiveSubjects.length;
+  const filledCells = (marks ?? []).filter(
+    (m) => effectiveSubjectIds.has(m.subject_id) && (m.marks_obtained != null || m.is_absent)
+  ).length;
   const completionPct = totalCells === 0 ? 0 : Math.round((filledCells / totalCells) * 100);
 
   const handleMarkChange = (
@@ -347,11 +355,11 @@ export function MarksEntryPage() {
 
       if (error) {
         console.error('Error submitting marks:', error);
-        toast.error('Failed to submit marks');
+        toast.error(error.message || 'Failed to submit marks');
         return;
       }
 
-      const res = data as any;
+      const res = Array.isArray(data) ? data[0] : data as any;
       if (!res?.success) {
         toast.error(res?.message || 'Failed to submit marks');
         return;
@@ -748,3 +756,4 @@ export function MarksEntryPage() {
     </div>
   );
 }
+
