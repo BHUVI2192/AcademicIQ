@@ -180,3 +180,51 @@ export function useLockTest() {
     },
   });
 }
+
+/**
+ * Admin: Approve all submitted marks for a test
+ */
+export function useApproveMarks() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ testId, adminId, remarks }: { testId: string; adminId: string; remarks?: string }) => {
+      const { data, error } = await supabase.rpc('approve_marks_for_test', {
+        p_test_id: testId,
+        p_admin_id: adminId,
+        p_remarks: remarks ?? null,
+      });
+      if (error) throw error;
+      const res = Array.isArray(data) ? data[0] : data as any;
+      if (!res?.success) throw new Error(res?.message ?? 'Failed to approve marks');
+      return res;
+    },
+    onSuccess: (_, { testId }) => {
+      qc.invalidateQueries({ queryKey: ['test', testId] });
+      qc.invalidateQueries({ queryKey: ['marks', testId] });
+    },
+  });
+}
+
+/**
+ * Admin: Publish approved marks to parents (sets marks_status = 'published', calculates rankings)
+ */
+export function usePublishMarksToParents() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ testId, adminId }: { testId: string; adminId: string }) => {
+      const { data, error } = await supabase.rpc('publish_test_marks', {
+        p_test_id: testId,
+        p_admin_id: adminId,
+      });
+      if (error) throw error;
+      const res = Array.isArray(data) ? data[0] : data as any;
+      if (!res?.success) throw new Error(res?.message ?? 'Failed to publish marks');
+      return res;
+    },
+    onSuccess: (_, { testId }) => {
+      qc.invalidateQueries({ queryKey: ['test', testId] });
+      qc.invalidateQueries({ queryKey: ['marks', testId] });
+      qc.invalidateQueries({ queryKey: ['rankings', testId] });
+    },
+  });
+}

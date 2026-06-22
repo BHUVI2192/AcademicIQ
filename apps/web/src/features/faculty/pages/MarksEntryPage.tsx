@@ -12,8 +12,11 @@ import {
   AlertCircle,
   Info,
   BookOpen,
+  ShieldCheck,
+  Users,
+  Clock,
 } from 'lucide-react';
-import { useTest, usePublishTest, useLockTest } from '@/hooks/useTests';
+import { useTest, usePublishTest, useLockTest, useApproveMarks, usePublishMarksToParents } from '@/hooks/useTests';
 import { useStudents } from '@/hooks/useStudents';
 import { useBatch } from '@/hooks/useBatches';
 import { useMarks, useDebouncedMarkSave, useBulkMarksUpload } from '@/hooks/useMarks';
@@ -229,6 +232,8 @@ export function MarksEntryPage() {
   const debounced = useDebouncedMarkSave(500);
   const publishMut = usePublishTest();
   const lockMut = useLockTest();
+  const approveMarksMut = useApproveMarks();
+  const publishMarksMut = usePublishMarksToParents();
   const bulk = useBulkMarksUpload();
   const [rtConnected, setRtConnected] = useState(false);
 
@@ -252,6 +257,11 @@ export function MarksEntryPage() {
   const test = testData;
   const subjects = testData?.subjects ?? [];
   const isLocked = !!test?.is_locked;
+  // marks_status drives the workflow: draft → submitted → approved → published
+  const marksStatus = (test as any)?.marks_status ?? 'draft';
+  // isPublished = faculty has submitted to admin (marks_status != 'draft')
+  const isSubmittedToAdmin = marksStatus !== 'draft';
+  // For backward compat with old isPublished checks
   const isPublished = !!test?.is_published;
 
   const canEditSubjectMarks = useCallback((subject: TestSubject) => {
@@ -386,6 +396,26 @@ export function MarksEntryPage() {
     }
   };
 
+  const handleApproveMarks = async () => {
+    if (!testId || !user || role !== 'admin') return;
+    try {
+      await approveMarksMut.mutateAsync({ testId, adminId: user.id });
+      toast.success('Marks approved successfully');
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to approve marks');
+    }
+  };
+
+  const handlePublishMarksToParents = async () => {
+    if (!testId || !user || role !== 'admin') return;
+    try {
+      await publishMarksMut.mutateAsync({ testId, adminId: user.id });
+      toast.success('Marks published to parents & rankings computed!');
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to publish marks');
+    }
+  };
+
   const handleFile = async (file: File) => {
     try {
       const rows = await parseMarksCsv(file);
@@ -499,9 +529,14 @@ export function MarksEntryPage() {
             Back to Dashboard
           </Link>
           <div className="flex items-center gap-3">
-            {isPublished && !isLocked && (
+            {marksStatus === 'submitted' && role === 'faculty' && (
               <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[10px] font-medium uppercase tracking-wider border border-amber-500/20">
-                <Info className="h-3 w-3" /> Awaiting Approval
+                <Clock className="h-3 w-3" /> Awaiting Admin Review
+              </div>
+            )}
+            {marksStatus === 'approved' && role === 'faculty' && (
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded-md text-[10px] font-medium uppercase tracking-wider border border-green-500/20">
+                <CheckCircle2 className="h-3 w-3" /> Approved by Admin
               </div>
             )}
             {test.chapter_name && (
@@ -526,12 +561,16 @@ export function MarksEntryPage() {
               </h1>
               <span className={`px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${
                 isLocked 
-                  ? 'bg-slate-900 text-white border-transparent' 
-                  : isPublished 
-                    ? 'bg-amber-500 text-white border-transparent' 
-                    : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
+                  ? 'bg-slate-900 text-white border-transparent'
+                  : marksStatus === 'published'
+                    ? 'bg-emerald-500 text-white border-transparent'
+                    : marksStatus === 'approved'
+                      ? 'bg-green-500 text-white border-transparent'
+                      : marksStatus === 'submitted'
+                        ? 'bg-amber-500 text-white border-transparent'
+                        : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
               }`}>
-                {isLocked ? 'Finalized' : isPublished ? 'Submitted' : 'Draft'}
+                {isLocked ? 'Finalized' : marksStatus === 'published' ? 'Published' : marksStatus === 'approved' ? 'Approved' : marksStatus === 'submitted' ? 'Submitted' : 'Draft'}
               </span>
             </div>
             <div className="flex items-center gap-4 text-sm text-slate-400">
@@ -552,17 +591,47 @@ export function MarksEntryPage() {
             <button onClick={() => setImportOpen(true)} disabled={isLocked || !canEditMarks} className="btn btn-secondary">
               <Upload className="h-4 w-4" /> Import CSV
             </button>
-            {!isPublished && (
-              <button onClick={() => setConfirmPublish(true)} disabled={isLocked || !canEditMarks || filledCells < totalCells} className="btn btn-primary">
+
+            {/* ── Faculty buttons ── */}
+            {role === 'faculty' && !isLocked && marksStatus === 'draft' && (
+              <button
+                onClick={() => setConfirmPublish(true)}
+                disabled={!canEditMarks || filledCells < totalCells}
+                className="btn btn-primary"
+              >
                 <Send className="h-4 w-4" /> Forward to Admin
               </button>
             )}
-            {isPublished && !isLocked && (
-              <button onClick={() => setConfirmLock(true)} disabled={!canEditMarks} className="btn btn-primary">
-                <Lock className="h-4 w-4" /> Finalize & Rank
+
+            {/* ── Admin buttons ── */}
+            {role === 'admin' && !isLocked && marksStatus === 'submitted' && (
+              <button
+                onClick={handleApproveMarks}
+                disabled={approveMarksMut.isPending}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <ShieldCheck className="h-4 w-4 text-green-500" />
+                {approveMarksMut.isPending ? 'Approving...' : 'Approve Marks'}
               </button>
             )}
-            {isLocked && (
+            {role === 'admin' && !isLocked && marksStatus === 'approved' && (
+              <button
+                onClick={handlePublishMarksToParents}
+                disabled={publishMarksMut.isPending}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                {publishMarksMut.isPending ? 'Publishing...' : 'Publish to Parents'}
+              </button>
+            )}
+            {role === 'admin' && (marksStatus === 'published' || isLocked) && (
+              <Link to={`/faculty/tests/${test.id}/rankings`} className="btn btn-primary">
+                <Trophy className="h-4 w-4" /> View Rankings
+              </Link>
+            )}
+
+            {/* ── Analytics (faculty after lock) ── */}
+            {isLocked && role === 'faculty' && (
               <Link to={`/faculty/tests/${test.id}/rankings`} className="btn btn-primary">
                 <Trophy className="h-4 w-4" /> Analytics
               </Link>
