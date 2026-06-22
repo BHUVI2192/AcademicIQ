@@ -335,9 +335,15 @@ BEGIN
             NEW.id,
             (NEW.raw_user_meta_data ->> 'college_id')::UUID,
             NEW.raw_user_meta_data ->> 'role',
-            COALESCE(NEW.raw_user_meta_data ->> 'full_name', NEW.email, NEW.phone, 'New User'),
+            COALESCE(
+                NEW.raw_user_meta_data ->> 'full_name', 
+                NEW.email, 
+                NEW.phone, 
+                NEW.raw_user_meta_data ->> 'phone', 
+                'New User'
+            ),
             NEW.email,
-            NEW.phone
+            COALESCE(NEW.phone, NEW.raw_user_meta_data ->> 'phone')
         )
         ON CONFLICT (id) DO NOTHING;
     END IF;

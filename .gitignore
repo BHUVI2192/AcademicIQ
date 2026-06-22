@@ -17,3 +17,31 @@ supabase/.temp
 *.tsbuildinfo
 
 .vercel
+
+# Scratch / diagnostic scripts (not for production)
+scratch/
+temp_*.sql
+temp_*.js
+check_*.js
+check_*.cjs
+inspect_*.js
+inspect_*.cjs
+verify_*.js
+test_rpc*.js
+test_rpc*.cjs
+diagnose_*.js
+diagnose_*.cjs
+diagnose_*.sql
+apply_*.js
+apply_*.cjs
+fix_*.js
+enable_*.js
+list_*.js
+list_*.cjs
+get_func_def.cjs
+run_*.js
+show_*.js
+reapply_*.cjs
+restore_*.js
+sync_*.js
+create_test_*.js

@@ -21,6 +21,13 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    watch: {
+      ignored: [
+        '**/node_modules/**',
+        '**/.supabase/**',
+        '**/dist/**',
+      ],
+    },
   },
   build: {
     outDir: 'dist',

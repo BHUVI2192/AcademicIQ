@@ -17,10 +17,13 @@ import {
   BarChart3,
   LineChart,
   User,
+  UserCheck,
+  Shield,
+  PenTool,
+  DollarSign,
 } from 'lucide-react';
 import type { Role } from '@shared';
 import { cn } from '@/lib/utils';
-import { CollegeSelector } from './CollegeSelector';
 
 interface NavItem {
   to: string;
@@ -34,8 +37,13 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/academic-years', label: 'Academic Years', icon: Calendar },
   { to: '/admin/batches', label: 'Batches', icon: GraduationCap },
   { to: '/admin/faculty', label: 'Faculty', icon: UserCog },
+  { to: '/admin/permissions', label: 'Permissions', icon: Shield },
   { to: '/admin/students', label: 'Students', icon: Users },
+  { to: '/admin/attendance', label: 'Attendance', icon: UserCheck },
+  { to: '/admin/attendance-approval', label: 'Attendance Approval', icon: ClipboardList },
+  { to: '/admin/fees-approval', label: 'Fees Approval', icon: DollarSign },
   { to: '/admin/tests', label: 'Tests', icon: ClipboardList },
+  { to: '/admin/marks-entry', label: 'Marks Entry', icon: PenTool },
   { to: '/admin/parents', label: 'Parents', icon: BookOpen },
   { to: '/admin/audit', label: 'Audit Log', icon: ScrollText },
 ];
@@ -44,12 +52,16 @@ const FACULTY_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/faculty/dashboard' },
   { label: 'Analytics', icon: BarChart3, to: '/faculty/analytics' },
   { label: 'Students', icon: Users, to: '/faculty/students' },
+  { label: 'Attendance', icon: UserCheck, to: '/faculty/attendance' },
+  { label: 'Fees', icon: DollarSign, to: '/faculty/fees' },
   { label: 'Tests', icon: BookOpen, to: '/faculty/tests' },
 ];
 
 const PARENT_NAV = [
   { label: 'Overview', icon: LayoutDashboard, to: '/parent/dashboard' },
   { label: 'Performance', icon: LineChart, to: '/parent/progress' },
+  { label: 'Attendance', icon: UserCheck, to: '/parent/attendance' },
+  { label: 'Fees', icon: DollarSign, to: '/parent/fees' },
   { label: 'Reports', icon: ClipboardList, to: '/parent/reports' },
   { label: 'Profile', icon: User, to: '/parent/profile' },
 ];
@@ -88,12 +100,7 @@ function SidebarContent({ role, onClose }: { role: Role; onClose?: () => void })
         )}
       </div>
 
-      {/* Primary Actions (College selector for admin) */}
-      {role === 'admin' && (
-        <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-800">
-          <CollegeSelector />
-        </div>
-      )}
+
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">

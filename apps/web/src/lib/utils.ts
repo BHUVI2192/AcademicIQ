@@ -31,3 +31,12 @@ export function debounce<F extends (...args: unknown[]) => void>(fn: F, ms: numb
     t = setTimeout(() => fn(...(args as Parameters<F>)), ms);
   }) as F;
 }
+
+export function formatCurrency(amount: number | null | undefined, fallback = '—'): string {
+  if (amount === null || amount === undefined) return fallback;
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(amount);
+}

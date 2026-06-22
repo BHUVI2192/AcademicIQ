@@ -53,6 +53,19 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isGlobalMode, collegeId]);
 
+  // Auto-select SJPC if in global mode and no selection yet
+  useEffect(() => {
+    if (isGlobalMode && !selectedCollegeId && colleges && colleges.length > 0) {
+      // Find SJPC (Saint Joseph PU College) or default to first college
+      const sjpc = colleges.find(c => c.name === 'Saint Joseph PU College');
+      if (sjpc) {
+        setSelectedCollegeId(sjpc.id);
+      } else if (colleges.length === 1) {
+        setSelectedCollegeId(colleges[0].id);
+      }
+    }
+  }, [isGlobalMode, selectedCollegeId, colleges]);
+
   return (
     <DirectoryContext.Provider value={{ 
       selectedCollegeId, 

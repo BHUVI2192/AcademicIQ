@@ -9,6 +9,7 @@ import {
 import toast from 'react-hot-toast';
 import { useDirectory } from '@/context/DirectoryContext';
 import { useBatches } from '@/hooks/useBatches';
+import { useFacultyList } from '@/hooks/useFaculty';
 import { supabase } from '@/lib/supabaseClient';
 import { TableSkeleton } from '@/components/LoadingSkeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -19,6 +20,69 @@ import { EXAM_CATEGORY_LABELS } from '@shared';
 import type { ExamCategory } from '@shared';
 import { useAuth } from '@/hooks/useAuth';
 import { useColleges } from '@/hooks/useColleges';
+import { Zap, Check } from 'lucide-react';
+
+interface ExamTemplate {
+  label: string;
+  description: string;
+  category: ExamCategory;
+  subType: string;
+  subjects: { name: string; maxMarks: number; numQuestions: number }[];
+}
+
+const EXAM_TEMPLATES: ExamTemplate[] = [
+  {
+    label: 'Daily Test (60)',
+    description: 'Standard 60-mark daily assessment',
+    category: 'Daily Test',
+    subType: 'Daily',
+    subjects: [{ name: '', maxMarks: 60, numQuestions: 0 }],
+  },
+  {
+    label: 'KCET Mock',
+    description: '60 Questions, 60 Marks, 80 Minutes',
+    category: 'KCET',
+    subType: 'Mock',
+    subjects: [{ name: '', maxMarks: 60, numQuestions: 60 }],
+  },
+  {
+    label: 'NEET Practice',
+    description: '180 Questions, 720 Marks',
+    category: 'NEET',
+    subType: 'Practice',
+    subjects: [
+      { name: 'Physics', maxMarks: 180, numQuestions: 45 },
+      { name: 'Chemistry', maxMarks: 180, numQuestions: 45 },
+      { name: 'Biology', maxMarks: 360, numQuestions: 90 },
+    ],
+  },
+  {
+    label: 'JEE Mains',
+    description: '300 Marks (Physics, Chem, Math)',
+    category: 'JEE',
+    subType: 'Mock',
+    subjects: [
+      { name: 'Physics', maxMarks: 100, numQuestions: 30 },
+      { name: 'Chemistry', maxMarks: 100, numQuestions: 30 },
+      { name: 'Mathematics', maxMarks: 100, numQuestions: 30 },
+    ],
+  },
+  {
+    label: 'Board Unit Test',
+    description: '25 Marks chapter-wise test',
+    category: 'Board Exam',
+    subType: 'Unit Test',
+    subjects: [{ name: '', maxMarks: 25, numQuestions: 0 }],
+  },
+];
+
+const TEMPLATE_COLORS: Record<string, string> = {
+  'Daily Test (60)': 'bg-blue-50/50 border-blue-100 text-blue-700',
+  'KCET Mock': 'bg-violet-50/50 border-violet-100 text-violet-700',
+  'NEET Practice': 'bg-emerald-50/50 border-emerald-100 text-emerald-700',
+  'JEE Mains': 'bg-indigo-50/50 border-indigo-100 text-indigo-700',
+  'Board Unit Test': 'bg-amber-50/50 border-amber-100 text-amber-700',
+};
 
 function useAdminTests(collegeId?: string | null, batchId?: string, search?: string) {
   return useQuery({
@@ -56,17 +120,29 @@ export function AdminTestsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [testDate, setTestDate] = useState('');
-  const [category, setCategory] = useState<ExamCategory>('Practice');
+  const [category, setCategory] = useState<ExamCategory>('Daily Test');
   const [subType, setSubType] = useState('');
+  const [chapterName, setChapterName] = useState('');
   const [targetCollegeId, setTargetCollegeId] = useState<string>('');
   const [targetBatchId, setTargetBatchId] = useState('');
-  const [subjects, setSubjects] = useState<{ name: string; maxMarks: number; numQuestions: number }[]>([
-    { name: '', maxMarks: 100, numQuestions: 0 }
+  const [subjects, setSubjects] = useState<{ name: string; maxMarks: number; numQuestions: number; assignedFacultyId?: string }[]>([
+    { name: '', maxMarks: 100, numQuestions: 0, assignedFacultyId: '' }
   ]);
+  const [assignedFacultyId, setAssignedFacultyId] = useState('');
   const [creating, setCreating] = useState(false);
 
   // Filter batches for the selected college in the modal
   const { data: modalBatches } = useBatches(targetCollegeId || selectedCollegeId || undefined);
+  const { data: facultyMembers } = useFacultyList(targetCollegeId || selectedCollegeId || undefined);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | undefined>(undefined);
+
+  const applyTemplate = (tpl: ExamTemplate) => {
+    setCategory(tpl.category);
+    setSubType(tpl.subType);
+    setSubjects(tpl.subjects.map(s => ({ ...s })));
+    setSelectedTemplate(tpl.label);
+    if (!title) setTitle(tpl.label);
+  };
 
   useEffect(() => {
     if (createOpen && selectedCollegeId) {
@@ -100,6 +176,13 @@ export function AdminTestsPage() {
       return;
     }
 
+    if (category === 'Board Exam') {
+      if (subjects.some(s => !s.assignedFacultyId)) {
+        toast.error('Assign faculty for all subjects in Board Exam');
+        return;
+      }
+    }
+
     setCreating(true);
     try {
       const { data: test, error: testErr } = await supabase
@@ -112,6 +195,8 @@ export function AdminTestsPage() {
           test_date: testDate,
           exam_category: category,
           exam_sub_type: subType.trim() || null,
+          chapter_name: chapterName.trim() || null,
+          assigned_faculty_id: assignedFacultyId || null,
         })
         .select()
         .single();
@@ -125,6 +210,7 @@ export function AdminTestsPage() {
           subject_name: s.name.trim(),
           max_marks: s.maxMarks,
           num_questions: s.numQuestions || 0,
+          assigned_faculty_id: (category === 'Board Exam' && s.assignedFacultyId) ? s.assignedFacultyId : null,
           display_order: idx,
         })));
 
@@ -144,10 +230,12 @@ export function AdminTestsPage() {
   const resetForm = () => {
     setTitle('');
     setTestDate('');
-    setCategory('Practice');
+    setCategory('Daily Test');
     setSubType('');
+    setChapterName('');
     setTargetBatchId('');
-    setSubjects([{ name: '', maxMarks: 100, numQuestions: 0 }]);
+    setAssignedFacultyId('');
+    setSubjects([{ name: '', maxMarks: 100, numQuestions: 0, assignedFacultyId: '' }]);
   };
 
   const filtered = (tests ?? []).filter((t: any) => {
@@ -339,6 +427,34 @@ export function AdminTestsPage() {
       {/* Create Modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Design New Assessment" size="xl">
         <form onSubmit={handleCreate} className="space-y-8 p-2">
+          {/* Template Selector */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">Quick Templates</label>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {EXAM_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.label}
+                  type="button"
+                  onClick={() => applyTemplate(tpl)}
+                  className={`flex flex-col items-start rounded-lg border p-3 text-left transition-all ${
+                    selectedTemplate === tpl.label
+                      ? 'ring-2 ring-slate-900 ring-offset-1 dark:ring-slate-100'
+                      : 'border-slate-200 hover:border-slate-300 hover:shadow-sm dark:border-slate-800'
+                  } ${TEMPLATE_COLORS[tpl.label] || ''}`}
+                >
+                  <div className="flex items-center justify-between w-full mb-1">
+                    <span className="font-semibold text-sm">{tpl.label}</span>
+                    {selectedTemplate === tpl.label && <Check className="h-3 w-3" />}
+                  </div>
+                  <span className="text-[10px] opacity-70 leading-tight line-clamp-2">{tpl.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {isGlobalMode && (
               <div className="md:col-span-2 space-y-2">
@@ -395,12 +511,11 @@ export function AdminTestsPage() {
               <div className="relative">
                 <Target className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="input-premium w-full pl-12">
-                  <option value="Practice">Practice / Internal Assessment</option>
-                  <option value="Board">Term Exam (Board)</option>
-                  <option value="KCET">KCET Preparatory</option>
-                  <option value="NEET">NEET Mock</option>
-                  <option value="JEE_Mains">JEE Mains</option>
-                  <option value="JEE_Advanced">JEE Advanced</option>
+                  <option value="Board Exam">Board Exam</option>
+                  <option value="KCET">KCET</option>
+                  <option value="NEET">NEET</option>
+                  <option value="JEE">JEE</option>
+                  <option value="Daily Test">Daily Test</option>
                 </select>
               </div>
             </div>
@@ -410,6 +525,34 @@ export function AdminTestsPage() {
               <div className="relative">
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input value={subType} onChange={(e) => setSubType(e.target.value)} className="input-premium w-full pl-12" placeholder="e.g. Monthly, Revision" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">Chapter Name (Optional)</label>
+              <div className="relative">
+                <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <input value={chapterName} onChange={(e) => setChapterName(e.target.value)} className="input-premium w-full pl-12" placeholder="e.g. Electrostatics, Organic Chemistry" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400 ml-1">
+                Assign Faculty {category === 'Board Exam' ? '(Required)' : '(Optional)'}
+              </label>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <select 
+                  value={assignedFacultyId} 
+                  onChange={(e) => setAssignedFacultyId(e.target.value)} 
+                  className="input-premium w-full pl-12"
+                  required={category === 'Board Exam'}
+                >
+                  <option value="">Select faculty for marks entry…</option>
+                  {facultyMembers?.map((f) => (
+                    <option key={f.id} value={f.id}>{f.full_name} ({f.subject || 'No Subject'})</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -439,7 +582,7 @@ export function AdminTestsPage() {
                       }} className="input-premium w-full pl-12" placeholder="e.g. Physics" required />
                     </div>
                   </div>
-                  <div className="w-28 space-y-1.5">
+                  <div className="w-24 space-y-1.5">
                     <label className="text-[9px] font-normal uppercase tracking-widest text-slate-400 ml-1">Max Marks</label>
                     <input type="number" value={s.maxMarks} onChange={(e) => {
                       const news = [...subjects];
@@ -447,7 +590,7 @@ export function AdminTestsPage() {
                       setSubjects(news);
                     }} className="input-premium w-full text-center font-normal" placeholder="100" required />
                   </div>
-                  <div className="w-28 space-y-1.5">
+                  <div className="w-24 space-y-1.5">
                     <label className="text-[9px] font-normal uppercase tracking-widest text-slate-400 ml-1">Questions</label>
                     <div className="relative">
                        <Clock className="absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
@@ -458,6 +601,26 @@ export function AdminTestsPage() {
                        }} className="input-premium w-full text-center pl-8 font-normal" placeholder="60" required />
                     </div>
                   </div>
+                  {category === 'Board Exam' && (
+                    <div className="w-56 space-y-1.5">
+                      <label className="text-[9px] font-normal uppercase tracking-widest text-slate-400 ml-1">Faculty for {s.name}</label>
+                      <select
+                        value={s.assignedFacultyId || ''}
+                        onChange={(e) => {
+                          const news = [...subjects];
+                          news[idx].assignedFacultyId = e.target.value;
+                          setSubjects(news);
+                        }}
+                        className="input-premium w-full"
+                        required
+                      >
+                        <option value="">Select faculty…</option>
+                        {facultyMembers?.map((f) => (
+                          <option key={f.id} value={f.id}>{f.full_name} ({f.subject || 'Any'})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   {subjects.length > 1 && (
                     <button type="button" onClick={() => setSubjects(subjects.filter((_, i) => i !== idx))} className="btn btn-ghost p-4 text-red-500 hover:bg-red-50 rounded-md mb-1">
                       <Trash2 className="h-5 w-5" />

@@ -8,6 +8,7 @@ interface CreateStudentInput {
   roll_number: string;
   full_name: string;
   date_of_birth?: string | null;
+  exam_wing?: 'NEET' | 'KCET' | null;
 }
 
 interface UpdateStudentInput {
@@ -16,10 +17,12 @@ interface UpdateStudentInput {
   date_of_birth?: string | null;
   is_active?: boolean;
   batch_id?: string;
+  exam_wing?: 'NEET' | 'KCET' | null;
 }
 
-export function useStudents(filters?: { batchId?: string; search?: string; collegeId?: string; includeInactive?: boolean }) {
+export function useStudents(filters?: { batchId?: string; search?: string; collegeId?: string; includeInactive?: boolean }, options?: { enabled?: boolean }) {
   return useQuery({
+    enabled: options?.enabled,
     queryKey: ['students', filters?.batchId ?? 'all', filters?.search ?? '', filters?.collegeId ?? 'all', filters?.includeInactive ?? false],
     queryFn: async (): Promise<Student[]> => {
       let q = supabase
@@ -32,7 +35,7 @@ export function useStudents(filters?: { batchId?: string; search?: string; colle
         .order('roll_number', { ascending: true });
 
       if (filters?.collegeId) q = q.eq('college_id', filters.collegeId);
-      if (filters?.batchId) q = q.eq('batch_id', filters.batchId);
+      if (filters?.batchId && filters.batchId !== 'none') q = q.eq('batch_id', filters.batchId);
       if (!filters?.includeInactive) {
         q = q.eq('is_active', true);
       }
@@ -73,6 +76,7 @@ export function useCreateStudent() {
           roll_number: input.roll_number.trim().toUpperCase(),
           full_name: input.full_name.trim(),
           date_of_birth: input.date_of_birth ?? null,
+          exam_wing: input.exam_wing ?? null,
           is_active: true,
         })
         .select('*')
@@ -105,3 +109,8 @@ export function useUpdateStudent() {
     },
   });
 }
+
+export function useStudentsInBatch(batchId: string) {
+  return useStudents({ batchId }, { enabled: !!batchId && batchId !== 'none' });
+}
+

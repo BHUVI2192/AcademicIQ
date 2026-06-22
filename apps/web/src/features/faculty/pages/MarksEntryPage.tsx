@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
+  BookOpen,
 } from 'lucide-react';
 import { useTest, usePublishTest, useLockTest } from '@/hooks/useTests';
 import { useStudents } from '@/hooks/useStudents';
@@ -217,7 +218,7 @@ const MarkCell = ({
 export function MarksEntryPage() {
   const { id: testId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const queryClient = useQueryClient();
   const { data: testData, isLoading: lsTest } = useTest(testId);
   const { data: marks, isLoading: lsMarks } = useMarks(testId);
@@ -252,6 +253,30 @@ export function MarksEntryPage() {
   const subjects = testData?.subjects ?? [];
   const isLocked = !!test?.is_locked;
   const isPublished = !!test?.is_published;
+
+  const canEditSubjectMarks = useCallback((subject: TestSubject) => {
+    if (!user || !role || !test) return false;
+    if (role === 'admin') return true;
+    if (role === 'faculty') {
+      if (test.exam_category === 'Board Exam') {
+        return subject.assigned_faculty_id === user.id;
+      }
+      return test.assigned_faculty_id === user.id;
+    }
+    return false;
+  }, [user, role, test]);
+
+  const canEditMarks = useMemo(() => {
+    if (!user || !role || !test) return false;
+    if (role === 'admin') return true;
+    if (role === 'faculty') {
+      if (test.exam_category === 'Board Exam') {
+        return subjects.some((sub) => sub.assigned_faculty_id === user.id);
+      }
+      return test.assigned_faculty_id === user.id;
+    }
+    return false;
+  }, [user, role, test, subjects]);
 
   const marksMap = useMemo(() => {
     const m = new Map<string, Mark>();
@@ -292,7 +317,8 @@ export function MarksEntryPage() {
       is_absent?: boolean;
     }
   ) => {
-    if (isLocked || !user || !testId) return;
+    const sub = subjects.find((s) => s.id === subjectId);
+    if (!sub || isLocked || !canEditSubjectMarks(sub) || !user || !testId) return;
     debounced.save({
       test_id: testId!,
       student_id: studentId,
@@ -311,18 +337,36 @@ export function MarksEntryPage() {
   };
 
   const handlePublish = async () => {
-    if (!testId) return;
+    if (!testId || !canEditMarks || !user) return;
     try {
-      await publishMut.mutateAsync(testId);
-      toast.success('Test published to parents');
+      const { data, error } = await supabase
+        .rpc('submit_marks_for_test', {
+          p_test_id: testId,
+          p_faculty_id: user.id,
+        });
+
+      if (error) {
+        console.error('Error submitting marks:', error);
+        toast.error('Failed to submit marks');
+        return;
+      }
+
+      const res = data as any;
+      if (!res?.success) {
+        toast.error(res?.message || 'Failed to submit marks');
+        return;
+      }
+
+      toast.success('✓ Marks forwarded to admin for approval');
       setConfirmPublish(false);
+      queryClient.invalidateQueries({ queryKey: ['test', testId] });
     } catch (err: any) {
-      toast.error(err.message ?? 'Publish failed');
+      toast.error(err.message ?? 'Submit failed');
     }
   };
 
   const handleLock = async () => {
-    if (!testId) return;
+    if (!testId || !canEditMarks) return;
     try {
       await lockMut.mutateAsync(testId);
       toast.success('Test locked & rankings computed');
@@ -348,7 +392,11 @@ export function MarksEntryPage() {
         const sub = subjectMap.get(subjName);
 
         if (!studentId) errs.push('Unknown Roll No.');
-        if (!sub) errs.push('Unknown subject');
+        if (!sub) {
+          errs.push('Unknown subject');
+        } else if (!canEditSubjectMarks(sub)) {
+          errs.push('Not authorized');
+        }
 
         const absent = String(r.is_absent ?? '').toLowerCase() === 'true';
         let marks = 0;
@@ -390,11 +438,21 @@ export function MarksEntryPage() {
     const valid = parsedMarks.filter((p) => !p.__error);
     if (valid.length === 0) { toast.error('No valid rows'); return; }
     
+    const authorizedValid = valid.filter((p) => {
+      const sub = subjects.find((s) => s.id === p.subject_id);
+      return sub ? canEditSubjectMarks(sub) : false;
+    });
+
+    if (authorizedValid.length === 0) {
+      toast.error('No authorized rows to upload');
+      return;
+    }
+    
     setUploading(true);
     try {
       await bulk.mutateAsync({
         test_id: testId,
-        marks: valid.map((p) => ({
+        marks: authorizedValid.map((p) => ({
           test_id: testId,
           student_id: p.student_id,
           subject_id: p.subject_id,
@@ -406,7 +464,7 @@ export function MarksEntryPage() {
           entered_by: user.id,
         })),
       });
-      toast.success(`${valid.length} marks uploaded`);
+      toast.success(`${authorizedValid.length} marks uploaded`);
       setImportOpen(false);
       setParsedMarks([]);
     } catch (err: any) {
@@ -435,7 +493,12 @@ export function MarksEntryPage() {
           <div className="flex items-center gap-3">
             {isPublished && !isLocked && (
               <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[10px] font-medium uppercase tracking-wider border border-amber-500/20">
-                <Info className="h-3 w-3" /> Live on Portal
+                <Info className="h-3 w-3" /> Awaiting Approval
+              </div>
+            )}
+            {test.chapter_name && (
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-md text-[10px] font-medium uppercase tracking-wider border border-indigo-500/20">
+                <BookOpen className="h-3 w-3" /> {test.chapter_name}
               </div>
             )}
             {rtConnected && !isLocked && (
@@ -457,10 +520,10 @@ export function MarksEntryPage() {
                 isLocked 
                   ? 'bg-slate-900 text-white border-transparent' 
                   : isPublished 
-                    ? 'bg-emerald-500 text-white border-transparent' 
+                    ? 'bg-amber-500 text-white border-transparent' 
                     : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
               }`}>
-                {isLocked ? 'Finalized' : isPublished ? 'Published' : 'Draft'}
+                {isLocked ? 'Finalized' : isPublished ? 'Submitted' : 'Draft'}
               </span>
             </div>
             <div className="flex items-center gap-4 text-sm text-slate-400">
@@ -469,19 +532,25 @@ export function MarksEntryPage() {
               <span className="uppercase tracking-widest text-[10px] font-medium">
                 {test.exam_category} {test.exam_sub_type ? `· ${test.exam_sub_type}` : ''}
               </span>
+              {test.assigned_faculty_id && (
+                <>
+                  <span className="w-1 h-1 rounded-md bg-slate-300" />
+                  <span className="text-[10px] font-medium text-slate-400">ASSIGNED TO FACULTY</span>
+                </>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setImportOpen(true)} disabled={isLocked} className="btn btn-secondary">
+            <button onClick={() => setImportOpen(true)} disabled={isLocked || !canEditMarks} className="btn btn-secondary">
               <Upload className="h-4 w-4" /> Import CSV
             </button>
             {!isPublished && (
-              <button onClick={() => setConfirmPublish(true)} disabled={isLocked || filledCells < totalCells} className="btn btn-primary">
-                <Send className="h-4 w-4" /> Publish Results
+              <button onClick={() => setConfirmPublish(true)} disabled={isLocked || !canEditMarks || filledCells < totalCells} className="btn btn-primary">
+                <Send className="h-4 w-4" /> Forward to Admin
               </button>
             )}
             {isPublished && !isLocked && (
-              <button onClick={() => setConfirmLock(true)} className="btn btn-primary">
+              <button onClick={() => setConfirmLock(true)} disabled={!canEditMarks} className="btn btn-primary">
                 <Lock className="h-4 w-4" /> Finalize & Rank
               </button>
             )}
@@ -550,16 +619,24 @@ export function MarksEntryPage() {
             <table className="w-full border-separate border-spacing-0">
               <thead className="sticky top-0 z-20">
                 <tr>
-                  <th className="sticky left-0 z-30 bg-white dark:bg-slate-950/80 backdrop-blur-2xl px-8 py-6 border-b border-r border-slate-100 dark:border-slate-800 text-left min-w-[140px]">
+                  <th className="sticky left-0 z-30 bg-white dark:bg-slate-950/80 backdrop-blur-2xl px-8 py-6 border-b border-r border-slate-100 dark:border-slate-800 text-left min-w-[120px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Roll No.</span>
                   </th>
-                  <th className="sticky left-[140px] z-30 bg-white dark:bg-slate-950/80 backdrop-blur-2xl px-8 py-6 border-b border-r border-slate-100 dark:border-slate-800 text-left min-w-[240px]">
+                  <th className="sticky left-[120px] z-30 bg-white dark:bg-slate-950/80 backdrop-blur-2xl px-8 py-6 border-b border-r border-slate-100 dark:border-slate-800 text-left min-w-[200px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Student Name</span>
+                  </th>
+                  <th className="sticky left-[320px] z-30 bg-white dark:bg-slate-950/80 backdrop-blur-2xl px-8 py-6 border-b border-r border-slate-100 dark:border-slate-800 text-left min-w-[100px]">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Wing</span>
                   </th>
                   {subjects.map((s) => (
                     <th key={s.id} className="bg-white dark:bg-slate-950/80 backdrop-blur-2xl px-8 py-6 border-b border-slate-100 dark:border-slate-800 text-center min-w-[200px]">
                       <div className="space-y-1">
                         <span className="text-sm font-medium text-slate-900 dark:text-white block">{s.subject_name}</span>
+                        {(s as any).chapter_name && (
+                          <span className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 block truncate max-w-[180px] mx-auto" title={(s as any).chapter_name}>
+                            {(s as any).chapter_name}
+                          </span>
+                        )}
                         <div className="flex items-center justify-center gap-2">
                           <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">{s.max_marks} Marks</span>
                           {s.num_questions > 0 && (
@@ -580,17 +657,30 @@ export function MarksEntryPage() {
                     <td className="sticky left-0 z-10 bg-white dark:bg-slate-950 px-8 py-4 border-r border-slate-50 dark:border-slate-900 font-mono text-[11px] font-medium text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                       {stu.roll_number}
                     </td>
-                    <td className="sticky left-[140px] z-10 bg-white dark:bg-slate-950 px-8 py-4 border-r border-slate-50 dark:border-slate-900">
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors truncate block max-w-[200px]">
+                    <td className="sticky left-[120px] z-10 bg-white dark:bg-slate-950 px-8 py-4 border-r border-slate-50 dark:border-slate-900">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors truncate block max-w-[160px]">
                         {stu.full_name}
                       </span>
+                    </td>
+                    <td className="sticky left-[320px] z-10 bg-white dark:bg-slate-950 px-8 py-4 border-r border-slate-50 dark:border-slate-900">
+                      {stu.exam_wing ? (
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${
+                          stu.exam_wing === 'NEET' 
+                            ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20' 
+                            : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                        }`}>
+                          {stu.exam_wing}
+                        </span>
+                      ) : (
+                        <span className="text-[8px] text-slate-300 font-black uppercase tracking-tighter">None</span>
+                      )}
                     </td>
                     {subjects.map((sub) => {
                       const cellKey = `${stu.id}:${sub.id}`;
                       const existing = marksMap.get(cellKey);
                       return (
                         <td key={sub.id} className="p-0 transition-colors focus-within:bg-slate-100/50 dark:focus-within:bg-slate-800/50">
-                          <MarkCell studentId={stu.id} subject={sub} testCategory={test!.exam_category as any} existing={existing} disabled={isLocked} onChange={(data) => handleMarkChange(stu.id, sub.id, data)} onAbsentToggle={(absent) => handleAbsentToggle(stu.id, sub.id, absent)} />
+                          <MarkCell studentId={stu.id} subject={sub} testCategory={test!.exam_category as any} existing={existing} disabled={isLocked || !canEditSubjectMarks(sub)} onChange={(data) => handleMarkChange(stu.id, sub.id, data)} onAbsentToggle={(absent) => handleAbsentToggle(stu.id, sub.id, absent)} />
                         </td>
                       );
                     })}
@@ -602,7 +692,7 @@ export function MarksEntryPage() {
         )}
       </div>
 
-      <ConfirmDialog open={confirmPublish} onClose={() => setConfirmPublish(false)} onConfirm={handlePublish} title="Publish results to parents?" message="This will make marks visible in the parent portal immediately. You can still edit them until the test is locked." confirmLabel="Publish Now" loading={publishMut.isPending} />
+      <ConfirmDialog open={confirmPublish} onClose={() => setConfirmPublish(false)} onConfirm={handlePublish} title="Forward marks to admin?" message="Your marks will be submitted for admin review and approval. You cannot edit them until admin reviews and sends changes. Admin can add remarks if corrections are needed." confirmLabel="Forward Now" loading={false} />
       <ConfirmDialog open={confirmLock} onClose={() => setConfirmLock(false)} onConfirm={handleLock} title="Lock marks and generate rankings?" message="Locking is permanent. It makes all marks read-only and triggers the ranking algorithms for the entire batch. This action cannot be undone." confirmLabel="Lock & Rank" variant="destructive" loading={lockMut.isPending} />
       <Modal open={importOpen} onClose={() => { setImportOpen(false); setParsedMarks([]); }} title="Bulk Upload Marks (CSV)" size="xl">
         <div className="space-y-6 p-2">

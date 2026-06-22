@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 
-type Variant = 'default' | 'success' | 'warning' | 'danger' | 'info';
+type Variant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'secondary' | 'outline';
 
 interface BadgeProps {
   variant?: Variant;
@@ -16,6 +16,8 @@ export function Badge({ variant = 'default', children, className }: BadgeProps) 
     warning: 'badge-warning',
     danger: 'badge-danger',
     info: 'badge-info',
+    secondary: 'badge-secondary',
+    outline: 'badge-outline',
   };
   return <span className={cn('badge', map[variant], className)}>{children}</span>;
 }

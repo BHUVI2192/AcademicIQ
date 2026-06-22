@@ -9,6 +9,7 @@ export interface ParsedStudentRow {
   full_name: string;
   date_of_birth?: string;
   batch_code?: string;
+  exam_wing?: 'NEET' | 'KCET' | null;
   _row: number;
 }
 
@@ -37,6 +38,7 @@ export function parseStudentsCsv(file: File): Promise<ParsedStudentRow[]> {
           full_name: (r.full_name ?? r.name ?? '').trim(),
           date_of_birth: (r.date_of_birth ?? r.dob ?? '').trim() || undefined,
           batch_code: (r.batch_code ?? r.batch ?? '').trim() || undefined,
+          exam_wing: (r.exam_wing ?? r.wing ?? '').trim().toUpperCase() as any || undefined,
           _row: i + 2,
         }));
         resolve(rows);
@@ -85,8 +87,8 @@ export function downloadCsv(filename: string, rows: Record<string, unknown>[]): 
 
 export function downloadStudentTemplate(): void {
   downloadCsv('student-template.csv', [
-    { roll_number: 'PUC-24-001', full_name: 'Sample Student', date_of_birth: '2008-04-15' },
-    { roll_number: 'PUC-24-002', full_name: 'Another Student', date_of_birth: '' },
+    { roll_number: 'PUC-24-001', full_name: 'Sample Student', date_of_birth: '2008-04-15', exam_wing: 'NEET' },
+    { roll_number: 'PUC-24-002', full_name: 'Another Student', date_of_birth: '', exam_wing: 'KCET' },
   ]);
 }
 

@@ -12,6 +12,7 @@ interface SubjectInput {
   num_questions?: number;
   weightage: number;
   display_order: number;
+  chapter_name?: string;
 }
 
 interface CreateTestInput {
@@ -20,22 +21,31 @@ interface CreateTestInput {
   created_by: string;
   title: string;
   description?: string;
+  chapter_name?: string;
   test_date: string;
   exam_category: ExamCategory;
   exam_sub_type?: string;
+  assigned_faculty_id?: string | null;
   subjects: SubjectInput[];
 }
 
-export function useTests(batchId?: string, batchIds?: string[]) {
+export function useTests(batchId?: string, batchIds?: string[], facultyId?: string) {
   return useQuery({
-    queryKey: ['tests', batchId ?? 'all', batchIds?.join(',') ?? ''],
+    queryKey: ['tests', batchId ?? 'all', batchIds?.join(',') ?? '', facultyId ?? ''],
     queryFn: async (): Promise<Test[]> => {
       let q = supabase.from('tests').select('*').order('test_date', { ascending: false });
-      if (batchId) {
-        q = q.eq('batch_id', batchId);
-      } else if (batchIds && batchIds.length > 0) {
+      
+      if (batchIds && batchIds.length > 0) {
+        // Faculty tests: only show tests for their assigned batches
         q = q.in('batch_id', batchIds);
+      } else if (batchId) {
+        q = q.eq('batch_id', batchId);
+      } else if (facultyId) {
+        // If no batch IDs but faculty ID provided, still filter by batch_id
+        // This handles the case where faculty has no assigned batches
+        q = q.eq('batch_id', 'no-batch-found');
       }
+      
       const { data, error } = await q;
       if (error) throw error;
       return data as Test[];
@@ -82,9 +92,11 @@ export function useCreateTest() {
           created_by: input.created_by,
           title: input.title.trim(),
           description: input.description?.trim() ?? null,
+          chapter_name: input.chapter_name?.trim() ?? null,
           test_date: input.test_date,
           exam_category: input.exam_category,
           exam_sub_type: input.exam_sub_type || null,
+          assigned_faculty_id: input.assigned_faculty_id || null,
           is_published: false,
           is_locked: false,
         })
@@ -102,6 +114,7 @@ export function useCreateTest() {
             max_marks: s.max_marks,
             num_questions: s.num_questions || 0,
             weightage: s.weightage,
+            chapter_name: s.chapter_name?.trim() || null,
             display_order: s.display_order,
           }))
         );

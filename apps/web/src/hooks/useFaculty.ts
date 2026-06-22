@@ -97,6 +97,10 @@ export function useCreateFaculty() {
       full_name: string; 
       college_id: string;
       phone?: string;
+      subject?: string;
+      can_add_students?: boolean;
+      can_manage_fees?: boolean;
+      can_manage_attendance?: boolean;
     }) => {
       console.log('Invoking create-faculty with payload:', input);
       const { data, error } = await supabase.functions.invoke('create-faculty', {
@@ -175,3 +179,39 @@ export function useDeleteFaculty() {
     },
   });
 }
+
+export function useUpdateFaculty() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { 
+      id: string;
+      full_name: string; 
+      subject?: string;
+      phone?: string;
+      can_add_students?: boolean;
+      can_manage_fees?: boolean;
+      can_manage_attendance?: boolean;
+    }) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: input.full_name,
+          subject: input.subject || null,
+          phone: input.phone || null,
+          can_add_students: !!input.can_add_students,
+          can_manage_fees: !!input.can_manage_fees,
+          can_manage_attendance: !!input.can_manage_attendance,
+        })
+        .eq('id', input.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['faculty-list', data.college_id] });
+      queryClient.invalidateQueries({ queryKey: ['faculty-list', null] });
+    },
+  });
+}
+

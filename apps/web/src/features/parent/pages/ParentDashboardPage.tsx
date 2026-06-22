@@ -3,8 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Trophy, TrendingUp, ChevronRight, GraduationCap, Users,
   FolderOpen, BookOpen, Atom, FlaskConical, Calculator,
-  ArrowLeft, BarChart2, Star, Settings, Lock, ArrowRight
+  ArrowLeft, BarChart2, Star, Settings, Lock, ArrowRight,
+  Calendar, DollarSign, Zap, Check
 } from 'lucide-react';
+import { useParentNotifications, useMarkNotificationRead } from '@/hooks/useNotifications';
+import { Card } from '@/components/Card';
+import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useVerifiedChildren, useChildRankings } from '@/hooks/useChildResults';
 import { StatCard } from '@/components/StatCard';
@@ -37,7 +41,7 @@ const EXAM_FOLDERS: ExamFolder[] = [
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/5 border-blue-500/10 dark:bg-blue-500/10 dark:border-blue-500/20',
     icon: Calculator,
-    matchFn: (r) => r.test?.exam_category === 'JEE_Mains',
+    matchFn: (r) => r.test?.exam_category === 'JEE' && r.test?.exam_sub_type?.toLowerCase().includes('main') === true,
   },
   {
     key: 'jee_advanced',
@@ -45,7 +49,7 @@ const EXAM_FOLDERS: ExamFolder[] = [
     color: 'text-indigo-500',
     bgColor: 'bg-indigo-500/5 border-indigo-500/10 dark:bg-indigo-500/10 dark:border-indigo-500/20',
     icon: Atom,
-    matchFn: (r) => r.test?.exam_category === 'JEE_Advanced',
+    matchFn: (r) => r.test?.exam_category === 'JEE' && r.test?.exam_sub_type?.toLowerCase().includes('adv') === true,
   },
   {
     key: 'neet',
@@ -61,7 +65,7 @@ const EXAM_FOLDERS: ExamFolder[] = [
     color: 'text-amber-500',
     bgColor: 'bg-amber-500/5 border-amber-500/10 dark:bg-amber-500/10 dark:border-amber-500/20',
     icon: BookOpen,
-    matchFn: (r) => r.test?.exam_category === 'Board',
+    matchFn: (r) => r.test?.exam_category === 'Board Exam',
   },
   {
     key: 'practice',
@@ -70,7 +74,7 @@ const EXAM_FOLDERS: ExamFolder[] = [
     bgColor: 'bg-slate-500/5 border-slate-500/10 dark:bg-slate-500/10 dark:border-slate-500/20',
     icon: FolderOpen,
     matchFn: (r) =>
-      !['KCET', 'JEE_Mains', 'JEE_Advanced', 'NEET', 'Board'].includes(r.test?.exam_category ?? ''),
+      !['KCET', 'JEE', 'NEET', 'Board Exam'].includes(r.test?.exam_category ?? ''),
   },
 ];
 
@@ -85,6 +89,11 @@ export function ParentDashboardPage() {
   );
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [activeSubFolder, setActiveSubFolder] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'board' | 'competitive' | 'attendance' | 'fees'>('board');
+
+  // Notifications Queries & Mutations
+  const { data: notifications, isLoading: lsNotifications } = useParentNotifications(profile?.id);
+  const markRead = useMarkNotificationRead();
 
   useEffect(() => {
     if (lsChildren) return;
@@ -122,12 +131,45 @@ export function ParentDashboardPage() {
     return groups;
   }, [rankings]);
 
-  const activeFolderData = EXAM_FOLDERS.find(f => f.key === (activeSubFolder || activeFolder));
-  const activeFolderRankings = (activeSubFolder || activeFolder) ? (folderGroups[activeSubFolder || activeFolder!] ?? []) : [];
+  // Filter exams based on student's exam_wing
+  const filteredFolderGroups = useMemo(() => {
+    const filtered: Record<string, ChildRanking[]> = {};
+    
+    if (!child?.exam_wing || (child.exam_wing as string) === 'NONE') {
+      // Show all exams
+      return folderGroups;
+    }
+    
+    // Filter by wing - determine which competitive exams to show
+    for (const [key, rankings] of Object.entries(folderGroups)) {
+      let shouldInclude = false;
+      
+      if (child.exam_wing === 'NEET') {
+        // NEET wing: Show NEET, JEE Mains, JEE Advanced, KCET, and Daily tests
+        shouldInclude = ['neet', 'jee_mains', 'jee_advanced', 'kcet', 'practice'].includes(key);
+      } else if (child.exam_wing === 'KCET') {
+        // KCET wing: Show KCET and Daily tests
+        shouldInclude = ['kcet', 'practice'].includes(key);
+      }
+      
+      // Always include board exams for all wings
+      if (key === 'board') {
+        shouldInclude = true;
+      }
+      
+      if (shouldInclude) {
+        filtered[key] = rankings;
+      }
+    }
+    return filtered;
+  }, [folderGroups, child?.exam_wing]);
 
-  const competitiveCount = COMPETITIVE_KEYS.reduce((acc, key) => acc + (folderGroups[key]?.length ?? 0), 0);
-  const boardCount = folderGroups['board']?.length ?? 0;
-  const practiceCount = folderGroups['practice']?.length ?? 0;
+  const activeFolderData = EXAM_FOLDERS.find(f => f.key === (activeSubFolder || activeFolder));
+  const activeFolderRankings = (activeSubFolder || activeFolder) ? (filteredFolderGroups[activeSubFolder || activeFolder!] ?? []) : [];
+
+  const competitiveCount = COMPETITIVE_KEYS.reduce((acc, key) => acc + (filteredFolderGroups[key]?.length ?? 0), 0);
+  const boardCount = filteredFolderGroups['board']?.length ?? 0;
+  const practiceCount = filteredFolderGroups['practice']?.length ?? 0;
 
   const latest = rankings?.[0];
   const avgPct =
@@ -201,7 +243,186 @@ export function ParentDashboardPage() {
         </div>
       )}
 
-      {/* Overview Stats */}
+      {/* Notifications Panel */}
+      {notifications && notifications.length > 0 && (
+        <Card className="p-6 border-none shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
+              Recent Activity & Notifications
+            </h3>
+            {notifications.some(n => !n.is_read) && (
+              <button
+                onClick={async () => {
+                  const unread = notifications.filter(n => !n.is_read);
+                  for (const n of unread) {
+                    await markRead.mutateAsync(n.id);
+                  }
+                  toast.success('All notifications marked as read');
+                }}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
+          <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+            {notifications.map(n => (
+              <div
+                key={n.id}
+                className={`p-3 rounded-lg border flex items-start justify-between gap-4 transition-all ${
+                  n.is_read
+                    ? 'bg-slate-50/50 border-slate-100 dark:bg-slate-900/10 dark:border-slate-800/50 dark:border-slate-800'
+                    : 'bg-blue-50/30 border-blue-100 dark:bg-blue-900/5 dark:border-blue-900/20 shadow-sm'
+                }`}
+              >
+                <div className="flex gap-3">
+                  <div className="mt-1">
+                    {!n.is_read && (
+                      <span className="flex h-2 w-2 rounded-full bg-blue-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                      {n.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {n.message}
+                    </p>
+                    <span className="text-[10px] text-slate-400 mt-2 block">
+                      {formatDate(n.created_at)}
+                    </span>
+                  </div>
+                </div>
+                {!n.is_read && (
+                  <button
+                    onClick={() => markRead.mutate(n.id)}
+                    className="p-1 rounded-md hover:bg-blue-100/50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                    title="Mark as read"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto -mx-8 px-8">
+        <button
+          onClick={() => {
+            setActiveTab('board');
+            setActiveFolder(null);
+            setActiveSubFolder(null);
+          }}
+          className={`px-4 py-3 text-sm font-medium uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'board'
+              ? 'border-b-slate-900 dark:border-b-white text-slate-900 dark:text-white'
+              : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <BookOpen className="inline h-4 w-4 mr-2" /> Board Exams
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('competitive');
+            setActiveFolder(null);
+            setActiveSubFolder(null);
+          }}
+          className={`px-4 py-3 text-sm font-medium uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'competitive'
+              ? 'border-b-slate-900 dark:border-b-white text-slate-900 dark:text-white'
+              : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <Zap className="inline h-4 w-4 mr-2" /> Competitive
+        </button>
+        <button
+          onClick={() => navigate('/parent/attendance')}
+          className={`px-4 py-3 text-sm font-medium uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'attendance'
+              ? 'border-b-slate-900 dark:border-b-white text-slate-900 dark:text-white'
+              : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <Calendar className="inline h-4 w-4 mr-2" /> Attendance
+        </button>
+        <button
+          onClick={() => navigate('/parent/fees')}
+          className={`px-4 py-3 text-sm font-medium uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'fees'
+              ? 'border-b-slate-900 dark:border-b-white text-slate-900 dark:text-white'
+              : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <DollarSign className="inline h-4 w-4 mr-2" /> Fees
+        </button>
+      </div>
+
+      {/* Conditional Content Based on Tab */}
+      {/* Summary Cards - Always visible */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {lsRanks ? (
+          <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
+        ) : (
+          <>
+            <button
+              onClick={() => {
+                setActiveTab('competitive');
+                setActiveFolder(null);
+                setActiveSubFolder(null);
+              }}
+              className="card p-6 border-none shadow-sm shadow-slate-200/50 dark:shadow-none transition-all hover:shadow-md hover:shadow-slate-200/70 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Competitive Exams</span>
+                <div className="p-2 rounded-md bg-violet-100 dark:bg-violet-900/30">
+                  <Zap className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                </div>
+              </div>
+              <p className="text-3xl font-light text-slate-900 dark:text-white">{competitiveCount}</p>
+              <div className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">Tests taken</div>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('board');
+                setActiveFolder(null);
+                setActiveSubFolder(null);
+              }}
+              className="card p-6 border-none shadow-sm shadow-slate-200/50 dark:shadow-none transition-all hover:shadow-md hover:shadow-slate-200/70 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Board Exams</span>
+                <div className="p-2 rounded-md bg-amber-100 dark:bg-amber-900/30">
+                  <BookOpen className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+              <p className="text-3xl font-light text-slate-900 dark:text-white">{boardCount}</p>
+              <div className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">Tests taken</div>
+            </button>
+
+            <Link
+              to="/parent/attendance"
+              className="card p-6 border-none shadow-sm shadow-slate-200/50 dark:shadow-none transition-all hover:shadow-md hover:shadow-slate-200/70 hover:-translate-y-1"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Attendance</span>
+                <div className="p-2 rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+                  <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+              </div>
+              <p className="text-3xl font-light text-slate-900 dark:text-white">View</p>
+              <div className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">Attendance record</div>
+            </Link>
+          </>
+        )}
+      </div>
+
+      {/* Conditional Content Based on Tab */}
+      {activeTab === 'board' ? (
+      <>
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
         {lsRanks ? (
           <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
@@ -571,6 +792,187 @@ export function ParentDashboardPage() {
           )}
         </div>
       </div>
+      </> 
+      ) : activeTab === 'competitive' ? (
+      <>
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+        {/* Child Details Card */}
+        <div className="lg:col-span-4">
+          <div className="card p-8 border-none shadow-sm shadow-slate-200/50 dark:shadow-none sticky top-24">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">Student Profile</div>
+            
+            <div className="flex items-center gap-6 mb-10">
+              <div className="flex h-20 w-20 items-center justify-center rounded-md bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm shadow-slate-900/20">
+                <GraduationCap className="h-10 w-10" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-medium text-slate-900 dark:text-white leading-tight">{child?.full_name}</h3>
+                <p className="text-sm font-mono font-medium text-slate-400 mt-1 uppercase tracking-widest">{child?.roll_number}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-6 pt-8 border-t border-slate-100 dark:border-white/5">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Competitive Divisions</div>
+                <div className="text-base font-medium text-slate-900 dark:text-white mt-2 space-y-1">
+                  <div className="flex items-center gap-2"><Zap className="h-3 w-3 text-blue-500" /> JEE Mains</div>
+                  <div className="flex items-center gap-2"><Zap className="h-3 w-3 text-indigo-500" /> JEE Advanced</div>
+                  <div className="flex items-center gap-2"><Zap className="h-3 w-3 text-emerald-500" /> NEET</div>
+                  <div className="flex items-center gap-2"><Zap className="h-3 w-3 text-violet-500" /> KCET</div>
+                </div>
+              </div>
+              <div className="pt-4">
+                <Link to="/parent/progress" className="group flex items-center justify-between w-full p-4 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-slate-900/10">
+                  <span className="text-xs font-medium uppercase tracking-[0.1em]">View All Rankings</span>
+                  <TrendingUp className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Competitive Results View */}
+        <div className="lg:col-span-8 space-y-12">
+          <div className="space-y-8">
+            <div className="flex items-end justify-between">
+              <div>
+                <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">Competitive Divisions</h2>
+                <p className="text-sm text-slate-500 mt-2 font-normal">Performance across entrance examinations</p>
+              </div>
+            </div>
+
+            {lsRanks ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2].map((i) => <div key={i} className="h-48 w-full animate-pulse rounded-md bg-slate-100 dark:bg-white/5" />)}
+              </div>
+            ) : competitiveCount === 0 ? (
+              <div className="card p-20 flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-200 dark:border-slate-800">
+                <div className="rounded-md bg-slate-50 dark:bg-white/5 p-8 mb-6">
+                  <Zap className="h-12 w-12 text-slate-200" />
+                </div>
+                <h3 className="text-xl font-medium text-slate-900 dark:text-white">No Competitive Results</h3>
+                <p className="text-sm text-slate-500 mt-3 max-w-[280px] font-light leading-relaxed">
+                  Competitive exam results will appear here once published by faculty.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {EXAM_FOLDERS.filter(f => COMPETITIVE_KEYS.includes(f.key)).map((folder) => {
+                  const folderRankings = folderGroups[folder.key] ?? [];
+                  const FolderIcon = folder.icon;
+                  const hasResults = folderRankings.length > 0;
+                  
+                  return (
+                    <button
+                      key={folder.key}
+                      disabled={!hasResults}
+                      onClick={() => setActiveSubFolder(folder.key)}
+                      className={`group flex items-center justify-between rounded-md border p-8 transition-all ${
+                        hasResults 
+                          ? `${folder.bgColor} hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg` 
+                          : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 opacity-60 grayscale'
+                      }`}
+                    >
+                      <div className="flex items-center gap-6">
+                        <div className={`p-4 rounded-md bg-white dark:bg-black/20 shadow-sm transition-transform ${hasResults && 'group-hover:scale-110'}`}>
+                          <FolderIcon className={`h-6 w-6 ${folder.color}`} />
+                        </div>
+                        <div className="text-left">
+                          <div className="text-xl font-medium text-slate-900 dark:text-white">
+                            {folder.label}
+                          </div>
+                          <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
+                            {hasResults ? `${folderRankings.length} Assessment Records` : 'No Records Published'}
+                          </div>
+                        </div>
+                      </div>
+                      {hasResults && (
+                        <div className={`p-2 rounded-md ${folder.color} bg-white dark:bg-black/20 transition-all group-hover:translate-x-1`}>
+                          <ArrowRight className="h-4 w-4" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Competitive Exam Details */}
+          {activeSubFolder && (
+            <div className="space-y-10">
+              <div className="flex items-center justify-between">
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setActiveSubFolder(null)}
+                    className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white"
+                  >
+                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> 
+                    Back to Competitive Exams
+                  </button>
+                  <div>
+                    <h2 className="text-4xl font-light tracking-tight text-slate-900 dark:text-white leading-none">
+                      {EXAM_FOLDERS.find(f => f.key === activeSubFolder)?.label}
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-2 font-light">
+                      Historical performance records and trends
+                    </p>
+                  </div>
+                </div>
+                <div className={`p-6 rounded-md ${EXAM_FOLDERS.find(f => f.key === activeSubFolder)?.bgColor || 'bg-blue-500/5'} border-0 shadow-sm`}>
+                  {(() => {
+                    const Icon = EXAM_FOLDERS.find(f => f.key === activeSubFolder)?.icon || FolderOpen;
+                    return <Icon className={`h-8 w-8 ${EXAM_FOLDERS.find(f => f.key === activeSubFolder)?.color}`} />;
+                  })()}
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                {(folderGroups[activeSubFolder] ?? []).length > 0 ? (
+                  (folderGroups[activeSubFolder] ?? []).map((r) => (
+                    <Link
+                      key={r.id}
+                      to={`/parent/tests/${r.test_id}`}
+                      className="card group flex items-center justify-between p-6 transition-all hover:bg-slate-900 dark:hover:bg-white hover:border-transparent hover:-translate-y-1 hover:shadow-sm hover:shadow-slate-900/10"
+                    >
+                      <div className="flex items-center gap-6">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-white/10 dark:group-hover:bg-slate-900/10 transition-colors">
+                          <BookOpen className="h-5 w-5 text-slate-500 group-hover:text-white dark:group-hover:text-slate-900" />
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="text-lg font-medium text-slate-900 dark:text-white group-hover:text-white dark:group-hover:text-slate-900 transition-colors">
+                            {r.test?.title}
+                          </div>
+                          <div className="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] group-hover:text-white/60 dark:group-hover:text-slate-900/60 transition-colors">
+                            {formatDate(r.test?.test_date)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-8">
+                        <div className="text-right">
+                          <div className="text-2xl font-light text-slate-900 dark:text-white group-hover:text-white dark:group-hover:text-slate-900">
+                            {Number(r.percentage).toFixed(1)}%
+                          </div>
+                          <div className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 group-hover:text-white/60 dark:group-hover:text-slate-900/60">
+                            Rank #{r.rank}
+                          </div>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-slate-300 transition-transform group-hover:translate-x-2 group-hover:text-white dark:group-hover:text-slate-900" />
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="p-12 text-center bg-slate-50 dark:bg-white/5 rounded-md border border-dashed border-slate-200 dark:border-white/10">
+                    <p className="text-slate-400 font-light">No assessment data available for this category yet.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      </>
+      ) : null}
     </div>
   );
 }

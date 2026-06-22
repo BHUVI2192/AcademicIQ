@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, UserCog, ShieldOff, ShieldCheck, Mail, Key, Trash2 } from 'lucide-react';
+import { Plus, UserCog, ShieldOff, ShieldCheck, Mail, Key, Trash2, Edit } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectory } from '@/context/DirectoryContext';
 import {
@@ -11,6 +11,7 @@ import {
   useToggleFacultyActive,
   useCreateFaculty,
   useDeleteFaculty,
+  useUpdateFaculty,
 } from '@/hooks/useFaculty';
 import { useBatches } from '@/hooks/useBatches';
 import { useColleges } from '@/hooks/useColleges';
@@ -34,12 +35,17 @@ export function FacultyPage() {
   const [targetCollegeId, setTargetCollegeId] = useState<string>('');
   const { data: batches } = useBatches(targetCollegeId || effectiveCollegeId);
   const create = useCreateFaculty();
+  const updateMut = useUpdateFaculty();
   const queryClient = useQueryClient();
   const toggleActive = useToggleFacultyActive(effectiveCollegeId);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
+  const [subject, setSubject] = useState('');
+  const [canAddStudents, setCanAddStudents] = useState(false);
+  const [canManageFees, setCanManageFees] = useState(false);
+  const [canManageAttendance, setCanManageAttendance] = useState(false);
   const [creating, setCreating] = useState(false);
 
   const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
@@ -69,6 +75,24 @@ export function FacultyPage() {
   const [confirmDelete, setConfirmDelete] = useState<Profile | null>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState<Profile | null>(null);
 
+  const [editFor, setEditFor] = useState<Profile | null>(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editSubject, setEditSubject] = useState('');
+  const [editCanAddStudents, setEditCanAddStudents] = useState(false);
+  const [editCanManageFees, setEditCanManageFees] = useState(false);
+  const [editCanManageAttendance, setEditCanManageAttendance] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (editFor) {
+      setEditFullName(editFor.full_name || '');
+      setEditSubject(editFor.subject || '');
+      setEditCanAddStudents(!!editFor.can_add_students);
+      setEditCanManageFees(!!editFor.can_manage_fees);
+      setEditCanManageAttendance(!!editFor.can_manage_attendance);
+    }
+  }, [editFor]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetCollegeId) {
@@ -86,6 +110,10 @@ export function FacultyPage() {
         college_id: targetCollegeId,
         full_name: fullName.trim(),
         email: email.trim().toLowerCase(),
+        subject: subject.trim() || undefined,
+        can_add_students: canAddStudents,
+        can_manage_fees: canManageFees,
+        can_manage_attendance: canManageAttendance,
       });
       
       if (res.email_sent) {
@@ -102,6 +130,10 @@ export function FacultyPage() {
       
       setEmail('');
       setFullName('');
+      setSubject('');
+      setCanAddStudents(false);
+      setCanManageFees(false);
+      setCanManageAttendance(false);
       
       // 2. Assign to batches if selected
       if (selectedBatchIds.length > 0 && res.faculty_id) {
@@ -123,6 +155,32 @@ export function FacultyPage() {
       toast.error(err.message ?? 'Failed to create');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFor) return;
+    if (!editFullName.trim()) {
+      toast.error('Enter a valid name');
+      return;
+    }
+    setUpdating(true);
+    try {
+      await updateMut.mutateAsync({
+        id: editFor.id,
+        full_name: editFullName.trim(),
+        subject: editSubject || undefined,
+        can_add_students: editCanAddStudents,
+        can_manage_fees: editCanManageFees,
+        can_manage_attendance: editCanManageAttendance,
+      });
+      toast.success('Faculty profile updated successfully');
+      setEditFor(null);
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to update');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -175,7 +233,13 @@ export function FacultyPage() {
                     <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Faculty Member</span>
                   </th>
                   <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Specialization</span>
+                  </th>
+                  <th className="px-8 py-6 text-left border-b border-academic-navy/5">
                     <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Email Address</span>
+                  </th>
+                  <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Permissions</span>
                   </th>
                   <th className="px-8 py-6 text-left border-b border-academic-navy/5">
                     <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Status</span>
@@ -193,15 +257,53 @@ export function FacultyPage() {
                         <div className="h-10 w-10 rounded-xl bg-academic-cyan/10 flex items-center justify-center text-academic-cyan">
                           <UserCog className="h-5 w-5" />
                         </div>
-                        <div className="font-bold text-academic-navy group-hover:text-academic-cyan transition-colors text-lg">
-                          {f.full_name}
+                        <div className="flex flex-col">
+                          <div className="font-bold text-academic-navy group-hover:text-academic-cyan transition-colors text-lg">
+                            {f.full_name}
+                          </div>
+                          {f.can_add_students && (
+                            <span className="text-[10px] font-bold text-academic-blue uppercase tracking-wider flex items-center gap-1">
+                              <ShieldCheck className="h-3 w-3" /> Can Register Students
+                            </span>
+                          )}
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-2">
+                        {f.subject ? (
+                          <Badge variant="secondary" className="bg-academic-navy/5 text-academic-navy/70 border-none font-bold uppercase text-[10px]">
+                            {f.subject}
+                          </Badge>
+                        ) : (
+                          <span className="text-academic-navy/20 font-bold text-[10px] uppercase tracking-widest">Not Set</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-2 text-academic-navy/60 font-medium">
                         <Mail className="h-4 w-4 opacity-40" />
                         {f.email ?? '—'}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col gap-2">
+                        {(f.can_manage_fees || f.can_manage_attendance) ? (
+                          <div className="flex flex-wrap gap-2">
+                            {f.can_manage_fees && (
+                              <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200 font-bold uppercase text-[9px] px-2 py-1">
+                                Fees
+                              </Badge>
+                            )}
+                            {f.can_manage_attendance && (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 font-bold uppercase text-[9px] px-2 py-1">
+                                Attendance
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-academic-navy/30 font-bold text-[10px] uppercase tracking-widest">None</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-8 py-6">
@@ -218,6 +320,13 @@ export function FacultyPage() {
                           className="px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-academic-blue hover:bg-academic-blue/5 rounded-lg transition-colors border border-academic-blue/10"
                         >
                           Assign Classes
+                        </button>
+                        <button
+                          onClick={() => setEditFor(f)}
+                          className="p-2 text-academic-blue/60 hover:text-academic-blue hover:bg-academic-blue/5 rounded-lg transition-all"
+                          title="Edit Faculty"
+                        >
+                          <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setConfirmDeactivate(f)}
@@ -332,6 +441,77 @@ export function FacultyPage() {
                   placeholder="sarah.chen@university.edu"
                   required
                 />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Primary Subject</label>
+                <select
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="input-premium w-full"
+                >
+                  <option value="">Select Subject...</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Biology">Biology</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="English">English</option>
+                  <option value="Kannada">Kannada</option>
+                  <option value="Hindi">Hindi</option>
+                </select>
+              </div>
+              <div className="flex items-end pb-1">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={canAddStudents}
+                      onChange={(e) => setCanAddStudents(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-11 h-6 bg-academic-navy/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-academic-blue"></div>
+                  </div>
+                  <span className="text-sm font-bold text-academic-navy/70 group-hover:text-academic-navy transition-colors">
+                    Allow Student Registration
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-3 p-4 bg-academic-navy/[0.02] rounded-2xl border border-academic-navy/5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60">Module Permissions</label>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={canManageFees}
+                      onChange={(e) => setCanManageFees(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 border-2 border-academic-navy/20 rounded peer-checked:bg-academic-blue peer-checked:border-academic-blue transition-all"></div>
+                  </div>
+                  <span className="text-sm font-medium text-academic-navy/70 group-hover:text-academic-navy transition-colors">
+                    Manage Fees Module
+                  </span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={canManageAttendance}
+                      onChange={(e) => setCanManageAttendance(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 border-2 border-academic-navy/20 rounded peer-checked:bg-academic-blue peer-checked:border-academic-blue transition-all"></div>
+                  </div>
+                  <span className="text-sm font-medium text-academic-navy/70 group-hover:text-academic-navy transition-colors">
+                    Manage Attendance Module
+                  </span>
+                </label>
               </div>
             </div>
             
@@ -491,6 +671,118 @@ export function FacultyPage() {
         variant="destructive"
         loading={deleteMut.isPending}
       />
+
+      <Modal
+        open={!!editFor}
+        onClose={() => setEditFor(null)}
+        title={`Edit Faculty: ${editFor?.full_name ?? ''}`}
+        size="md"
+      >
+        <form onSubmit={handleUpdate} className="space-y-6 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Full Legal Name</label>
+              <input
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+                className="input-premium w-full"
+                placeholder="e.g. Dr. Sarah Chen"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Institutional Email</label>
+              <input
+                type="email"
+                value={editFor?.email ?? ''}
+                className="input-premium w-full bg-academic-navy/[0.03] cursor-not-allowed opacity-70"
+                disabled
+                title="Email address cannot be changed."
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Primary Subject</label>
+              <select
+                value={editSubject}
+                onChange={(e) => setEditSubject(e.target.value)}
+                className="input-premium w-full"
+              >
+                <option value="">Select Subject...</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Biology">Biology</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="English">English</option>
+                <option value="Kannada">Kannada</option>
+                <option value="Hindi">Hindi</option>
+              </select>
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={editCanAddStudents}
+                    onChange={(e) => setEditCanAddStudents(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="w-11 h-6 bg-academic-navy/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-academic-blue"></div>
+                </div>
+                <span className="text-sm font-bold text-academic-navy/70 group-hover:text-academic-navy transition-colors">
+                  Allow Student Registration
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-3 p-4 bg-academic-navy/[0.02] rounded-2xl border border-academic-navy/5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60">Module Permissions</label>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={editCanManageFees}
+                    onChange={(e) => setEditCanManageFees(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="w-5 h-5 border-2 border-academic-navy/20 rounded peer-checked:bg-academic-blue peer-checked:border-academic-blue transition-all"></div>
+                </div>
+                <span className="text-sm font-medium text-academic-navy/70 group-hover:text-academic-navy transition-colors">
+                  Manage Fees Module
+                </span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={editCanManageAttendance}
+                    onChange={(e) => setEditCanManageAttendance(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="w-5 h-5 border-2 border-academic-navy/20 rounded peer-checked:bg-academic-blue peer-checked:border-academic-blue transition-all"></div>
+                </div>
+                <span className="text-sm font-medium text-academic-navy/70 group-hover:text-academic-navy transition-colors">
+                  Manage Attendance Module
+                </span>
+              </label>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4">
+            <button type="button" onClick={() => setEditFor(null)} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">
+              Cancel
+            </button>
+            <button type="submit" disabled={updating} className="btn-premium btn-primary px-10">
+              {updating ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

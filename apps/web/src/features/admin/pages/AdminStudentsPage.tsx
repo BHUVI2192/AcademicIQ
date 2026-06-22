@@ -24,6 +24,7 @@ interface ParsedRow {
   roll_number: string;
   full_name: string;
   date_of_birth?: string;
+  exam_wing?: string | null;
   __error?: string;
 }
 
@@ -49,6 +50,7 @@ export function AdminStudentsPage() {
   const [rollNumber, setRollNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [dob, setDob] = useState('');
+  const [examWing, setExamWing] = useState<'NEET' | 'KCET' | ''>('');
   const [targetCollegeId, setTargetCollegeId] = useState<string>('');
   const [batchId, setBatchId] = useState('');
 
@@ -90,6 +92,7 @@ export function AdminStudentsPage() {
         roll_number: rollNumber.toUpperCase(),
         full_name: fullName.trim(),
         date_of_birth: dob || undefined,
+        exam_wing: examWing || undefined,
       });
       toast.success('Student added successfully');
       setCreateOpen(false);
@@ -97,6 +100,7 @@ export function AdminStudentsPage() {
       setFullName('');
       setDob('');
       setBatchId('');
+      setExamWing('');
     } catch (err: any) {
       toast.error(err.message ?? 'Failed to add student');
     }
@@ -137,6 +141,7 @@ export function AdminStudentsPage() {
             usn: r.roll_number.toUpperCase(),
             full_name: r.full_name,
             date_of_birth: r.date_of_birth ?? null,
+            exam_wing: r.exam_wing ?? null,
           })),
         },
       });
@@ -303,6 +308,9 @@ export function AdminStudentsPage() {
                       <th className="px-8 py-6 text-left border-b border-academic-navy/5">
                         <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Guardians</span>
                       </th>
+                      <th className="px-8 py-6 text-left border-b border-academic-navy/5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Wing</span>
+                      </th>
                       <th className="px-8 py-6 text-center border-b border-academic-navy/5">
                         <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Status</span>
                       </th>
@@ -352,6 +360,15 @@ export function AdminStudentsPage() {
                               </button>
                             )}
                           </div>
+                        </td>
+                        <td className="px-8 py-6">
+                           {s.exam_wing ? (
+                             <Badge variant="outline" className="bg-academic-blue/5 text-academic-blue border-academic-blue/20 font-bold px-3 py-1 text-[10px]">
+                               {s.exam_wing}
+                             </Badge>
+                           ) : (
+                             <span className="text-[10px] font-bold text-muted-foreground/40 italic">N/A</span>
+                           )}
                         </td>
                         <td className="px-8 py-6 text-center">
                           <button onClick={() => toggleStatus(s)} className="transition-transform active:scale-95">
@@ -441,6 +458,19 @@ export function AdminStudentsPage() {
               <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
               <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="input-premium w-full pl-12" />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Exam Wing (Optional)</label>
+            <select
+              value={examWing}
+              onChange={(e) => setExamWing(e.target.value as any)}
+              className="input-premium w-full"
+            >
+              <option value="">No Special Wing</option>
+              <option value="NEET">NEET Wing</option>
+              <option value="KCET">KCET Wing</option>
+            </select>
           </div>
 
           <div className="flex justify-end gap-3 pt-6">

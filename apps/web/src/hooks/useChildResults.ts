@@ -10,7 +10,7 @@ export function useVerifiedChildren(parentId: string | undefined) {
       const { data, error } = await supabase
         .from('parent_student_map')
         .select(
-          'student:students(id, full_name, roll_number, batch:batches(id, name))'
+          'student:students(id, full_name, roll_number, exam_wing, batch:batches(id, name))'
         )
         .eq('parent_id', parentId)
         .eq('is_verified', true);
@@ -26,6 +26,7 @@ export function useVerifiedChildren(parentId: string | undefined) {
             roll_number: s.roll_number,
             batch_id: s.batch?.id ?? '',
             batch_name: s.batch?.name ?? '',
+            exam_wing: s.exam_wing,
           } as VerifiedChild;
         })
         .filter(Boolean) as VerifiedChild[];
