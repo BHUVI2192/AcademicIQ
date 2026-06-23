@@ -17,6 +17,9 @@ CREATE POLICY faculty_insert_own_attendance ON public.attendance
 -- So they can check if a session is already marked by someone else
 DROP POLICY IF EXISTS faculty_select_own_attendance ON public.attendance;
 
+-- Ensure the policy does not already exist before creation
+DROP POLICY IF EXISTS faculty_select_batch_attendance ON public.attendance;
+
 CREATE POLICY faculty_select_batch_attendance ON public.attendance
   FOR SELECT
   TO authenticated

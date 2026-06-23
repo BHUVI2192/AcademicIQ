@@ -106,6 +106,7 @@ export function AppRouter() {
         <Route path="fees-approval" element={<AdminFeesApprovalPage />} />
         <Route path="tests/:id/marks" element={<MarksEntryPage />} />
         <Route path="tests/:id/rankings" element={<RankingsPage />} />
+        <Route path="rankings" element={<RankingsPage />} />
         <Route path="marks-approval" element={<MarksApprovalPage />} />
         <Route path="parents" element={<ParentsPage />} />
         <Route path="audit" element={<AuditLogPage />} />
@@ -131,6 +132,7 @@ export function AppRouter() {
         <Route path="tests" element={<TestsPage />} />
         <Route path="tests/:id/marks" element={<MarksEntryPage />} />
         <Route path="tests/:id/rankings" element={<RankingsPage />} />
+        <Route path="rankings" element={<RankingsPage />} />
       </Route>
 
       {/* Parent */}
@@ -148,6 +150,8 @@ export function AppRouter() {
         <Route path="dashboard" element={<ParentDashboardPage />} />
         <Route path="profile" element={<ParentProfilePage />} />
         <Route path="tests/:testId" element={<TestDetailPage />} />
+        <Route path="tests/:id/rankings" element={<RankingsPage />} />
+        <Route path="rankings" element={<RankingsPage />} />
         <Route path="progress" element={<ProgressPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="fees" element={<ParentFeesPage />} />

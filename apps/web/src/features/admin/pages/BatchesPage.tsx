@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, GraduationCap, Folder } from 'lucide-react';
+import { Plus, GraduationCap, Folder, FolderOpen, ChevronRight, ChevronDown, LayoutGrid, List } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectory } from '@/context/DirectoryContext';
 import { useBatches, useCreateBatch } from '@/hooks/useBatches';
@@ -27,6 +27,25 @@ export function BatchesPage() {
   const [stream, setStream] = useState<Stream>('PCMB');
   const [academicYearId, setAcademicYearId] = useState('');
   const [targetCollegeId, setTargetCollegeId] = useState<string>('');
+
+  const [viewMode, setViewMode] = useState<'folder' | 'table'>('folder');
+  const [expandedPaths, setExpandedPaths] = useState<Record<string, boolean>>({});
+
+  const togglePath = (path: string) => {
+    setExpandedPaths(prev => ({ ...prev, [path]: !prev[path] }));
+  };
+
+  useEffect(() => {
+    if (batches && batches.length > 0) {
+      const initialExpanded: Record<string, boolean> = {};
+      batches.forEach(b => {
+        if (b.academic_year?.label) {
+          initialExpanded[b.academic_year.label] = true;
+        }
+      });
+      setExpandedPaths(prev => ({ ...initialExpanded, ...prev }));
+    }
+  }, [batches]);
 
   const { data: years } = useAcademicYears(targetCollegeId || effectiveCollegeId);
   const create = useCreateBatch();
@@ -87,9 +106,27 @@ export function BatchesPage() {
             </p>
           </div>
         </div>
-        <button onClick={() => setOpen(true)} className="btn-premium btn-primary px-8">
-          <Plus className="h-4 w-4 mr-2" /> New Class
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+            <button
+              onClick={() => setViewMode('folder')}
+              className={`p-2 rounded-md transition-all ${viewMode === 'folder' ? 'bg-white dark:bg-slate-900 text-academic-blue shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              title="Folder Directory View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded-md transition-all ${viewMode === 'table' ? 'bg-white dark:bg-slate-900 text-academic-blue shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              title="Flat Table View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+          <button onClick={() => setOpen(true)} className="btn-premium btn-primary px-8">
+            <Plus className="h-4 w-4 mr-2" /> New Class
+          </button>
+        </div>
       </div>
 
       <div className="glass-card overflow-hidden border-none shadow-2xl shadow-academic-navy/5 p-0">
@@ -106,7 +143,7 @@ export function BatchesPage() {
               action={{ label: 'Create Class', onClick: () => setOpen(true) }}
             />
           </div>
-        ) : (
+        ) : viewMode === 'table' ? (
           <div className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-0">
               <thead className="bg-academic-navy/[0.03]">
@@ -166,6 +203,151 @@ export function BatchesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : (
+          <div className="p-8 space-y-4 bg-white dark:bg-slate-950/40">
+            <div className="text-sm font-semibold text-academic-navy/60 mb-6 border-b border-academic-navy/5 pb-4">
+              Directory Navigation
+            </div>
+            
+            <div className="space-y-3 pl-1">
+              {Object.entries(
+                (batches ?? []).reduce((acc, b) => {
+                  const yearLabel = b.academic_year?.label || 'Unknown Academic Year';
+                  const classLabel = b.class_level ? `Grade ${b.class_level}` : 'General';
+                  const streamName = b.stream || 'GENERAL';
+
+                  if (!acc[yearLabel]) acc[yearLabel] = {};
+                  if (!acc[yearLabel][classLabel]) acc[yearLabel][classLabel] = {};
+                  if (!acc[yearLabel][classLabel][streamName]) acc[yearLabel][classLabel][streamName] = [];
+                  
+                  acc[yearLabel][classLabel][streamName].push(b);
+                  return acc;
+                }, {} as Record<string, Record<string, Record<string, typeof batches>>>)
+              ).map(([yearLabel, grades]) => {
+                const yearPath = yearLabel;
+                const isYearExpanded = expandedPaths[yearPath];
+                
+                return (
+                  <div key={yearLabel} className="space-y-1.5">
+                    {/* Year Folder row */}
+                    <div 
+                      onClick={() => togglePath(yearPath)}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-academic-navy/[0.02] cursor-pointer transition-colors border border-transparent hover:border-academic-navy/5"
+                    >
+                      <button className="text-academic-navy/40">
+                        {isYearExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
+                      {isYearExpanded ? (
+                        <FolderOpen className="h-5 w-5 text-academic-blue" />
+                      ) : (
+                        <Folder className="h-5 w-5 text-academic-blue/80" />
+                      )}
+                      <span className="font-bold text-academic-navy text-base">{yearLabel}</span>
+                      <span className="text-xs text-muted-foreground bg-academic-navy/5 px-2 py-0.5 rounded-full font-bold">
+                        {Object.values(grades).reduce((acc, streams) => acc + Object.values(streams).reduce((a, b) => a + b.length, 0), 0)} Classes
+                      </span>
+                    </div>
+
+                    {/* Year Expanded Content */}
+                    {isYearExpanded && (
+                      <div className="pl-6 ml-5 border-l border-academic-navy/10 space-y-1.5">
+                        {Object.entries(grades).map(([classLabel, streams]) => {
+                          const gradePath = `${yearPath}/${classLabel}`;
+                          const isGradeExpanded = expandedPaths[gradePath];
+                          
+                          return (
+                            <div key={classLabel} className="space-y-1.5">
+                              {/* Grade Folder row */}
+                              <div 
+                                onClick={() => togglePath(gradePath)}
+                                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-academic-navy/[0.02] cursor-pointer transition-colors border border-transparent hover:border-academic-navy/5"
+                              >
+                                <button className="text-academic-navy/40">
+                                  {isGradeExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                                </button>
+                                {isGradeExpanded ? (
+                                  <FolderOpen className="h-4.5 w-4.5 text-indigo-500" />
+                                ) : (
+                                  <Folder className="h-4.5 w-4.5 text-indigo-400" />
+                                )}
+                                <span className="font-semibold text-academic-navy/90 text-sm">{classLabel}</span>
+                                <span className="text-[10px] text-muted-foreground bg-indigo-50 dark:bg-indigo-950/20 px-1.5 py-0.5 rounded font-semibold text-indigo-600 dark:text-indigo-400">
+                                  {Object.values(streams).reduce((a, b) => a + b.length, 0)} Streams
+                                </span>
+                              </div>
+
+                              {/* Grade Expanded Content */}
+                              {isGradeExpanded && (
+                                <div className="pl-6 ml-5 border-l border-academic-navy/10 space-y-1.5">
+                                  {Object.entries(streams).map(([streamName, batchList]) => {
+                                    const streamPath = `${gradePath}/${streamName}`;
+                                    const isStreamExpanded = expandedPaths[streamPath];
+                                    
+                                    return (
+                                      <div key={streamName} className="space-y-1.5">
+                                        {/* Stream Folder row */}
+                                        <div 
+                                          onClick={() => togglePath(streamPath)}
+                                          className="flex items-center gap-3 p-2 rounded-md hover:bg-academic-navy/[0.02] cursor-pointer transition-colors border border-transparent hover:border-academic-navy/5"
+                                        >
+                                          <button className="text-academic-navy/40">
+                                            {isStreamExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                          </button>
+                                          {isStreamExpanded ? (
+                                            <FolderOpen className="h-4 w-4 text-emerald-500" />
+                                          ) : (
+                                            <Folder className="h-4 w-4 text-emerald-400" />
+                                          )}
+                                          <span className="font-medium text-academic-navy/80 text-xs tracking-wide uppercase">{streamName}</span>
+                                          <span className="text-[9px] text-muted-foreground bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded font-bold text-emerald-600 dark:text-emerald-400">
+                                            {batchList.length} Sections
+                                          </span>
+                                        </div>
+
+                                        {/* Stream Expanded Content (Leaf Batches) */}
+                                        {isStreamExpanded && (
+                                          <div className="pl-6 ml-5 border-l border-academic-navy/10 space-y-1.5">
+                                            {batchList.map((b) => (
+                                              <div 
+                                                key={b.id} 
+                                                className="flex items-center justify-between p-3 rounded-lg bg-slate-50/50 dark:bg-slate-900/20 hover:bg-slate-50 dark:hover:bg-slate-900/40 border border-slate-100 dark:border-slate-800 transition-colors shadow-sm"
+                                              >
+                                                <div className="flex items-center gap-3">
+                                                  <div className="h-8 w-8 rounded bg-academic-blue/10 flex items-center justify-center text-academic-blue">
+                                                    <GraduationCap className="h-4.5 w-4.5" />
+                                                  </div>
+                                                  <div>
+                                                    <div className="font-bold text-sm text-academic-navy">{b.name}</div>
+                                                    <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">{b.code}</div>
+                                                  </div>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-3">
+                                                  {b.is_active ? (
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">Active</span>
+                                                  ) : (
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">Inactive</span>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

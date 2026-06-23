@@ -192,13 +192,13 @@ BEGIN
     RETURN;
   END IF;
 
-  -- Check if all marks are approved
-  SELECT COUNT(*) INTO v_not_approved_count
-  FROM public.marks
-  WHERE test_id = p_test_id AND approval_status != 'approved';
-
-  IF v_not_approved_count > 0 THEN
-    RETURN QUERY SELECT FALSE, 'Not all marks are approved. Cannot publish.'::TEXT, 0;
+  -- Verify test marks status is approved
+  SELECT marks_status INTO v_test_status FROM public.tests WHERE id = p_test_id;
+  IF v_test_status IS NULL THEN
+    RETURN QUERY SELECT FALSE, 'Test not found'::TEXT, 0;
+  END IF;
+  IF v_test_status != 'approved' THEN
+    RETURN QUERY SELECT FALSE, 'Test not approved yet. Cannot publish.'::TEXT, 0;
     RETURN;
   END IF;
 

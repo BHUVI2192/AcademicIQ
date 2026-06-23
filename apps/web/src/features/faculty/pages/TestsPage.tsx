@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardList, ArrowRight } from 'lucide-react';
+import { ClipboardList, ArrowRight, Trophy } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTests } from '@/hooks/useTests';
 import { useFacultyAssignedBatches, useBatches } from '@/hooks/useBatches';
@@ -74,7 +74,7 @@ export function TestsPage() {
                   <th>Date</th>
                   <th>Batch</th>
                   <th>Status</th>
-                  <th></th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -100,12 +100,23 @@ export function TestsPage() {
                       )}
                     </td>
                     <td>
-                      <Link
-                        to={`/faculty/tests/${t.id}/marks`}
-                        className="btn btn-ghost inline-flex items-center gap-1 text-xs"
-                      >
-                        Open <ArrowRight className="h-3 w-3" />
-                      </Link>
+                      <div className="flex justify-end gap-3 items-center">
+                        <Link
+                          to={`/faculty/tests/${t.id}/marks`}
+                          className="btn btn-ghost inline-flex items-center gap-1 text-xs"
+                        >
+                          Open <ArrowRight className="h-3 w-3" />
+                        </Link>
+                        {(t.is_locked || t.is_published) && (
+                          <Link
+                            to={`/faculty/tests/${t.id}/rankings`}
+                            className="inline-flex items-center justify-center p-1.5 rounded-md bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                            title="View Leaderboard"
+                          >
+                            <Trophy className="h-4 w-4" />
+                          </Link>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

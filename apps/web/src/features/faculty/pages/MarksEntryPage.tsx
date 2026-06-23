@@ -388,7 +388,7 @@ export function MarksEntryPage() {
     try {
       await lockMut.mutateAsync(testId);
       toast.success('Test locked & rankings computed');
-      navigate(`/faculty/tests/${testId}/rankings`);
+      navigate(`/${role}/tests/${testId}/rankings`);
     } catch (err: any) {
       toast.error(err.message ?? 'Lock failed');
     } finally {
@@ -520,7 +520,7 @@ export function MarksEntryPage() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <Link 
-            to={user?.role === 'admin' ? '/admin/tests' : '/faculty/tests'} 
+            to={role === 'admin' ? '/admin/tests' : '/faculty/tests'} 
             className="group inline-flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
           >
             <div className="p-1.5 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:scale-110 transition-transform">
@@ -614,7 +614,7 @@ export function MarksEntryPage() {
                 {approveMarksMut.isPending ? 'Approving...' : 'Approve Marks'}
               </button>
             )}
-            {role === 'admin' && !isLocked && marksStatus === 'approved' && (
+            {role === 'admin' && !isLocked && (marksStatus === 'approved' || (marksStatus === 'published' && !test?.is_published)) && (
               <button
                 onClick={handlePublishMarksToParents}
                 disabled={publishMarksMut.isPending}
@@ -625,7 +625,7 @@ export function MarksEntryPage() {
               </button>
             )}
             {role === 'admin' && (marksStatus === 'published' || isLocked) && (
-              <Link to={`/faculty/tests/${test.id}/rankings`} className="btn btn-primary">
+              <Link to={`/admin/tests/${test.id}/rankings`} className="btn btn-primary">
                 <Trophy className="h-4 w-4" /> View Rankings
               </Link>
             )}

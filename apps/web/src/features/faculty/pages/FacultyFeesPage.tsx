@@ -347,6 +347,11 @@ export function FacultyFeesPage() {
                                 <strong>Rejection remarks:</strong> {fee.admin_remarks}
                               </div>
                             )}
+                            {isEditing && (fee.status === 'published' || fee.status === 'approved' || fee.status === 'submitted') && (
+                              <div className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-2 py-1.5 rounded border border-amber-100 dark:border-amber-900/50 max-w-xs">
+                                ⚠️ Saving will revert status to Draft and require admin re-approval.
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-5">
@@ -447,16 +452,14 @@ export function FacultyFeesPage() {
                               </>
                             ) : (
                               <>
-                                {/* Edit Button (allowed if status is draft, rejected, or no draft yet) */}
-                                {(fee.status === 'draft' || fee.status === 'rejected' || fee.status === 'no_draft') && (
-                                  <button
-                                    onClick={() => startEdit(fee)}
-                                    className="p-2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-900 hover:text-white transition-colors"
-                                    title="Edit Draft"
-                                  >
-                                    <Edit2 className="h-4 w-4" />
-                                  </button>
-                                )}
+                                {/* Edit Button */}
+                                <button
+                                  onClick={() => startEdit(fee)}
+                                  className="p-2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-900 hover:text-white transition-colors"
+                                  title="Edit Fees"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
 
                                 {/* Submit to Admin Button (only if draft exists and status is draft or rejected) */}
                                 {(fee.status === 'draft' || fee.status === 'rejected') && fee.draft_id && (

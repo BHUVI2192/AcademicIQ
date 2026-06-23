@@ -111,6 +111,7 @@ export function TestDetailPage() {
                     <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Marks</th>
                     <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Max</th>
                     <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Yield</th>
+                    <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Subject Rank</th>
                     <th className="px-8 py-4 text-right text-[10px] font-normal uppercase tracking-widest text-slate-400">Status</th>
                   </tr>
                 </thead>
@@ -119,6 +120,10 @@ export function TestDetailPage() {
                     const pct = !m.is_absent && m.marks_obtained != null && m.max_marks > 0
                       ? ((m.marks_obtained / m.max_marks) * 100).toFixed(1)
                       : null;
+                    const subRankObj = data.subjectRankings?.find((sr) => sr.subject_id === m.subject_id);
+                    const subRank = subRankObj ? subRankObj.rank : null;
+                    const totalStudents = subRankObj ? subRankObj.total_students : null;
+
                     return (
                       <tr key={m.id} className="group hover:bg-white dark:hover:bg-slate-900 transition-colors">
                         <td className="px-8 py-6">
@@ -138,6 +143,15 @@ export function TestDetailPage() {
                            ) : (
                              <span className="text-sm text-slate-300">—</span>
                            )}
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          {subRank != null ? (
+                            <span className="text-sm font-normal text-slate-900 dark:text-white">
+                              #{subRank} <span className="text-xs text-slate-400">/ {totalStudents}</span>
+                            </span>
+                          ) : (
+                            <span className="text-sm text-slate-300">—</span>
+                          )}
                         </td>
                         <td className="px-8 py-6 text-right">
                           {m.is_absent ? (
@@ -190,6 +204,15 @@ export function TestDetailPage() {
                          </div>
                       </div>
                    </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/10 dark:border-slate-900/10 text-center">
+                   <Link 
+                     to={`/parent/tests/${testId}/rankings`}
+                     className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-white dark:text-slate-900 hover:opacity-80 transition-opacity"
+                   >
+                     View Class Leaderboard <ArrowRight className="h-3 w-3 animate-pulse" />
+                   </Link>
                 </div>
              </div>
            )}

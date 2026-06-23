@@ -61,6 +61,7 @@ export interface ChildTestDetail {
   test: Test;
   subjects: TestSubject[];
   ranking: Ranking | null;
+  subjectRankings: any[];
 }
 
 export function useChildTestDetail(testId: string | undefined, studentId: string | undefined) {
@@ -88,10 +89,16 @@ export function useChildTestDetail(testId: string | undefined, studentId: string
         .eq('test_id', testId)
         .eq('student_id', studentId)
         .maybeSingle();
+      const { data: subjectRankings } = await supabase
+        .from('subject_rankings')
+        .select('*')
+        .eq('test_id', testId)
+        .eq('student_id', studentId);
       return {
         test: test as Test,
         subjects: (subjects ?? []) as TestSubject[],
         ranking: (ranking ?? null) as Ranking | null,
+        subjectRankings: (subjectRankings ?? []) as any[],
       };
     },
     enabled: !!testId && !!studentId,

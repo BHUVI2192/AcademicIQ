@@ -21,6 +21,7 @@ import {
   Shield,
   PenTool,
   DollarSign,
+  Trophy,
 } from 'lucide-react';
 import type { Role } from '@shared';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/fees-approval', label: 'Fees Approval', icon: DollarSign },
   { to: '/admin/tests', label: 'Tests', icon: ClipboardList },
   { to: '/admin/marks-entry', label: 'Marks Entry', icon: PenTool },
+  { to: '/admin/rankings', label: 'Leaderboard', icon: Trophy },
   { to: '/admin/parents', label: 'Parents', icon: BookOpen },
   { to: '/admin/audit', label: 'Audit Log', icon: ScrollText },
 ];
@@ -55,11 +57,13 @@ const FACULTY_NAV = [
   { label: 'Attendance', icon: UserCheck, to: '/faculty/attendance' },
   { label: 'Fees', icon: DollarSign, to: '/faculty/fees' },
   { label: 'Tests', icon: BookOpen, to: '/faculty/tests' },
+  { label: 'Leaderboard', icon: Trophy, to: '/faculty/rankings' },
 ];
 
 const PARENT_NAV = [
   { label: 'Overview', icon: LayoutDashboard, to: '/parent/dashboard' },
   { label: 'Performance', icon: LineChart, to: '/parent/progress' },
+  { label: 'Leaderboard', icon: Trophy, to: '/parent/rankings' },
   { label: 'Attendance', icon: UserCheck, to: '/parent/attendance' },
   { label: 'Fees', icon: DollarSign, to: '/parent/fees' },
   { label: 'Reports', icon: ClipboardList, to: '/parent/reports' },

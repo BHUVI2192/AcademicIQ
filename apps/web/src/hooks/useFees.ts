@@ -569,4 +569,25 @@ export function usePublishBatchFeesToParents() {
   });
 }
 
+/**
+ * Get published fees history for admin view
+ */
+export function usePublishedFeesHistory(adminId?: string) {
+  return useQuery({
+    queryKey: ['published-fees-history', adminId],
+    queryFn: async () => {
+      if (!adminId) return [];
+
+      const { data, error } = await supabase.rpc('get_published_fees_history', {
+        p_admin_id: adminId,
+      });
+
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+    enabled: !!adminId,
+  });
+}
+
+
 

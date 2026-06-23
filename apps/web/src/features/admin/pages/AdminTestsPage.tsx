@@ -406,7 +406,7 @@ export function AdminTestsPage() {
                         <Link to={`/admin/tests/${t.id}/marks`} className="p-2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all shadow-sm">
                           <Eye className="h-4 w-4" />
                         </Link>
-                        {t.is_locked && (
+                        {(t.is_locked || t.is_published) && (
                           <Link to={`/admin/tests/${t.id}/rankings`} className="p-2 rounded-md bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm">
                             <Trophy className="h-4 w-4" />
                           </Link>
