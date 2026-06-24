@@ -13,45 +13,59 @@ import {
 export function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
-      {/* Simple Navigation */}
-      <nav className="border-b border-slate-100 bg-white sticky top-0 z-50">
+      {/* Simple Navigation - Premium Glassmorphic */}
+      <nav className="border-b border-white/10 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50 text-white transition-all">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <GraduationCap className="text-slate-900 h-6 w-6" />
-            <span className="text-xl font-medium tracking-tight">AcademeIQ</span>
+            <GraduationCap className="text-white h-6 w-6" />
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">AcademeIQ</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <Link to="/login" className="hover:text-slate-900 transition-colors">Faculty</Link>
-            <Link to="/login" className="hover:text-slate-900 transition-colors">Parents</Link>
-            <Link to="/login" className="bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800 transition-colors">
-              Sign In
-            </Link>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-200">
+            <Link to="/login" className="hover:text-white transition-colors">Faculty</Link>
+            <Link to="/login" className="hover:text-white transition-colors">Parents</Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <main className="pt-24 pb-20 px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-50 border border-slate-100 text-[10px] font-medium text-slate-500 uppercase tracking-widest">
-            <Sparkles className="h-3 w-3" />
+      {/* Hero Section with College Background */}
+      <main className="relative min-h-[85vh] flex items-center justify-center bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/college-hero.jpg")' }}>
+        {/* Dark overlay with dynamic gradients */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/70 to-slate-900"></div>
+        
+        {/* Subtle grid pattern overlay for texture */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+
+        <div className="relative max-w-5xl mx-auto px-6 py-20 text-center space-y-8 z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-semibold text-slate-200 uppercase tracking-widest animate-pulse">
+            <Sparkles className="h-3 w-3 text-amber-400" />
             Enterprise Academic Management
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900">
-            Institutional intelligence <span className="text-slate-400">reimagined.</span>
-          </h1>
+          <div className="space-y-4">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
+              <span className="block text-xl sm:text-2xl md:text-3xl font-medium tracking-[0.25em] text-amber-400 mb-4 uppercase">
+                Welcome to
+              </span>
+              ST. JOSEPH'S PU COLLEGE
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-300 to-amber-200">
+                OF EXCELLENCE
+              </span>
+            </h1>
+          </div>
 
-          <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-light">
             A secure, high-performance ecosystem for modern academic institutions. 
             Streamline marks, track progress, and manage resources with absolute clarity.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/login" className="w-full sm:w-auto bg-slate-900 text-white px-8 py-4 rounded-md font-medium text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <Link to="/login" className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-8 py-4 rounded-md font-semibold text-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all flex items-center justify-center gap-2 group">
               Get Started
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link to="/login" className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/25 text-white px-8 py-4 rounded-md font-semibold text-lg hover:bg-white/20 transition-all flex items-center justify-center">
+              Learn More
             </Link>
           </div>
         </div>
