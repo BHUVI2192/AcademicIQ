@@ -16,9 +16,9 @@ export function LandingPage() {
       {/* Simple Navigation - Premium Glassmorphic */}
       <nav className="border-b border-white/10 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50 text-white transition-all">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="text-white h-6 w-6" />
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">AcademeIQ</span>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="SJCE Logo" className="h-8 w-8 object-contain" />
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">SJCE</span>
           </div>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-200">
@@ -113,9 +113,9 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="py-16 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            <span className="font-medium">AcademeIQ</span>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="SJCE Logo" className="h-6 w-6 object-contain" />
+            <span className="font-semibold text-slate-900">SJCE</span>
           </div>
           
           <div className="flex gap-8 text-sm text-slate-500">

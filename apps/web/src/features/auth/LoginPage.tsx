@@ -143,18 +143,15 @@ export function LoginPage({ isAdminView: isAdminProp }: LoginPageProps) {
 
         {/* Brand */}
         <div className="text-center space-y-4">
-          <div className={cn(
-            "inline-flex h-14 w-14 items-center justify-center rounded-xl text-white mx-auto shadow-md transition-colors",
-            adminPath ? "bg-[hsl(var(--academic-blue))]" : tab === 'faculty' ? "bg-[hsl(var(--academic-cyan))]" : "bg-[hsl(var(--academic-yellow))]"
-          )}>
-            {adminPath ? <ShieldCheck className="h-7 w-7" /> : <GraduationCap className="h-7 w-7" />}
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-white p-2 shadow-sm border border-[hsl(var(--card-border))]">
+            <img src="/logo.png" alt="SJCE Logo" className="h-full w-full object-contain" />
           </div>
           <div className="space-y-1">
             <h1 className="text-3xl font-medium tracking-tight text-[hsl(var(--academic-navy))]">
               {adminPath ? 'Sovereign Console' : tab === 'faculty' ? 'Faculty Suite' : 'Guardian Portal'}
             </h1>
             <p className="text-[10px] text-[hsl(var(--text-muted))] uppercase tracking-[0.3em] font-normal">
-              {adminPath ? 'Secure Access Node' : 'AcademeIQ Ecosystem'}
+              {adminPath ? 'Secure Access Node' : 'SJCE Ecosystem'}
             </p>
           </div>
         </div>

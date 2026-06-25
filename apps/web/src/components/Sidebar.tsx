@@ -85,12 +85,10 @@ function SidebarContent({ role, onClose }: { role: Role; onClose?: () => void })
       {/* Brand Header */}
       <div className="flex h-16 items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900">
-            <GraduationCap className="h-4 w-4" />
-          </div>
+          <img src="/logo.png" alt="SJCE Logo" className="h-9 w-9 object-contain" />
           <div>
-            <div className="text-base font-medium tracking-tight text-slate-900 dark:text-white">
-              AcademeIQ
+            <div className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+              SJCE
             </div>
           </div>
         </div>
