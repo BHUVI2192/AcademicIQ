@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Calendar, CheckCircle2 } from 'lucide-react';
+import { Plus, Calendar, CheckCircle2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectory } from '@/context/DirectoryContext';
 import {
   useAcademicYears,
   useCreateAcademicYear,
   useSetCurrentAcademicYear,
+  useDeleteAcademicYear,
 } from '@/hooks/useAcademicYears';
 import { useColleges } from '@/hooks/useColleges';
 import { Modal } from '@/components/Modal';
@@ -25,6 +26,17 @@ export function AcademicYearsPage() {
   const { data: colleges } = useColleges();
   const create = useCreateAcademicYear();
   const setCurrent = useSetCurrentAcademicYear();
+  const deleteYear = useDeleteAcademicYear();
+
+  const handleDelete = async (id: string, label: string) => {
+    if (!window.confirm(`Are you sure you want to delete the academic year "${label}"? This will delete all batches, students, tests, marks, and associated records for this year!`)) return;
+    try {
+      await deleteYear.mutateAsync(id);
+      toast.success('Academic year deleted successfully');
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to delete academic year');
+    }
+  };
 
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState('');
@@ -126,19 +138,28 @@ export function AcademicYearsPage() {
                       )}
                     </td>
                     <td>
-                      {!y.is_current && (
+                      <div className="flex items-center gap-2">
+                        {!y.is_current && (
+                          <button
+                            onClick={() =>
+                              setCurrent.mutate(
+                                { id: y.id, college_id: y.college_id },
+                                { onSuccess: () => toast.success('Set as current') }
+                              )
+                            }
+                            className="btn btn-ghost text-xs font-normal"
+                          >
+                            Set as current
+                          </button>
+                        )}
                         <button
-                          onClick={() =>
-                            setCurrent.mutate(
-                              { id: y.id, college_id: y.college_id },
-                              { onSuccess: () => toast.success('Set as current') }
-                            )
-                          }
-                          className="btn btn-ghost text-xs font-normal"
+                          onClick={() => handleDelete(y.id, y.label)}
+                          className="btn btn-ghost text-xs font-normal text-rose-600 hover:text-rose-700 hover:bg-rose-50 p-1"
+                          title="Delete Academic Year"
                         >
-                          Set as current
+                          <Trash2 className="h-4 w-4" />
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}

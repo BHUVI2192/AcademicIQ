@@ -12,6 +12,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   type ReactNode,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
@@ -37,9 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   const [lastFetchedId, setLastFetchedId] = useState<string | null>(null);
+  const activePromiseRef = useRef<Promise<Profile | null> | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    // Prevent redundant fetches for the same user if profile is already being fetched or exists
+    // If a fetch is already in progress, reuse the existing promise to prevent concurrent db requests
+    if (activePromiseRef.current) {
+      console.log('[Auth] Profile fetch already in progress, reusing promise');
+      return activePromiseRef.current;
+    }
+
+    // Prevent redundant fetches for the same user if profile is already loaded
     if (lastFetchedId === userId && profile) {
       console.log('[Auth] Profile already loaded for:', userId);
       return profile;
@@ -48,34 +56,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('[Auth] Fetching profile for UID:', userId);
     setLastFetchedId(userId);
 
-    // Add a race against a timeout to prevent infinite hang
-    const fetchPromise = supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+    const runFetch = async () => {
+      // Add a race against a timeout to prevent infinite hang
+      const fetchPromise = supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) =>
-      setTimeout(() => reject(new Error('Profile fetch timed out (15s)')), 15000)
-    );
+      const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) =>
+        setTimeout(() => reject(new Error('Profile fetch timed out (15s)')), 15000)
+      );
 
-    try {
-      const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;
+      try {
+        const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;
 
-      if (error) {
-        console.error('[Auth] Profile fetch error:', error);
-        setProfile(null);
+        if (error) {
+          console.error('[Auth] Profile fetch error:', error);
+          setProfile(null);
+          return null;
+        }
+
+        console.log('[Auth] Profile fetched successfully:', data ? 'Found' : 'Not Found');
+        const prof = data as Profile | null;
+        setProfile(prof);
+        return prof;
+      } catch (err: any) {
+        console.error('[Auth] Profile fetch failed/timed out:', err.message);
+        // We don't clear profile here to avoid UI flickering, but we stop loading
         return null;
+      } finally {
+        activePromiseRef.current = null;
       }
+    };
 
-      console.log('[Auth] Profile fetched successfully:', data ? 'Found' : 'Not Found');
-      setProfile(data as Profile | null);
-      return data as Profile | null;
-    } catch (err: any) {
-      console.error('[Auth] Profile fetch failed/timed out:', err.message);
-      // We don't clear profile here to avoid UI flickering, but we stop loading
-      return null;
-    }
+    const promise = runFetch();
+    activePromiseRef.current = promise;
+    return promise;
   }, [lastFetchedId, profile]);
 
   const refreshProfile = useCallback(async () => {

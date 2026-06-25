@@ -25,6 +25,7 @@ import { CardSkeleton } from '@/components/LoadingSkeleton';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Modal } from '@/components/Modal';
 import { parseMarksCsv, downloadMarksTemplate } from '@/lib/csvParser';
+import { parseOMRExcel } from '@/lib/excelParser';
 import { supabase } from '@/lib/supabaseClient';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -61,9 +62,9 @@ interface MarkCellProps {
   disabled: boolean;
   onChange: (data: {
     marks_obtained: number;
-    num_attempted: number;
-    num_unanswered: number;
-    num_incorrect: number;
+    num_attempted: number | null;
+    num_unanswered: number | null;
+    num_incorrect: number | null;
   }) => void;
   onAbsentToggle: (absent: boolean) => void;
 }
@@ -76,26 +77,36 @@ const MarkCell = ({
   onChange,
   onAbsentToggle,
 }: MarkCellProps) => {
-  const [att, setAtt] = useState<string>(existing?.num_attempted?.toString() ?? '');
+  const tq = subject.num_questions || 0;
+  const isOMRStyle = testCategory !== 'Board Exam' && tq > 0;
+
+  const [att, setAtt] = useState<string>(
+    isOMRStyle
+      ? (existing?.num_attempted?.toString() ?? '')
+      : (existing?.marks_obtained?.toString() ?? '')
+  );
   const [inc, setInc] = useState<string>(existing?.num_incorrect?.toString() ?? '');
 
   const isAbsent = !!existing?.is_absent;
-  const tq = subject.num_questions || 0;
 
   useEffect(() => {
     if (existing) {
-      setAtt(existing.num_attempted?.toString() ?? '');
+      setAtt(
+        isOMRStyle
+          ? (existing.num_attempted?.toString() ?? '')
+          : (existing.marks_obtained?.toString() ?? '')
+      );
       setInc(existing.num_incorrect?.toString() ?? '');
     }
-  }, [existing]);
+  }, [existing, isOMRStyle]);
 
   const handleBlur = () => {
     if (disabled || isAbsent) return;
-    const a = parseInt(att) || 0;
-    const i = parseInt(inc) || 0;
-    const u = Math.max(0, tq - a);
 
-    if (tq > 0) {
+    if (isOMRStyle) {
+      const a = parseInt(att) || 0;
+      const i = parseInt(inc) || 0;
+      const u = Math.max(0, tq - a);
       if (a > tq) {
         toast.error(`Attempted (${a}) > Total (${tq})`);
         return;
@@ -119,14 +130,14 @@ const MarkCell = ({
       }
       onChange({
         marks_obtained: marks,
-        num_attempted: 0,
-        num_unanswered: 0,
-        num_incorrect: 0,
+        num_attempted: null,
+        num_unanswered: null,
+        num_incorrect: null,
       });
     }
   };
 
-  if (tq > 0) {
+  if (isOMRStyle) {
     return (
       <div className={`relative p-4 transition-all duration-300 ${isAbsent ? 'bg-red-500/5' : ''}`}>
         <div className="flex flex-col gap-3">
@@ -166,16 +177,16 @@ const MarkCell = ({
               onClick={() => onAbsentToggle(!isAbsent)}
               disabled={disabled}
               className={`flex-1 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-[0.1em] transition-all ${
-                isAbsent 
-                  ? 'bg-red-500 text-white' 
+                isAbsent
+                  ? 'bg-red-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-red-500/10 hover:text-red-500'
               }`}
             >
               {isAbsent ? 'Absent' : 'Mark ABS'}
             </button>
             <div className={`px-3 py-1.5 rounded-md font-black text-xs min-w-[45px] text-center ${
-              isAbsent 
-                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400' 
+              isAbsent
+                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                 : (existing?.marks_obtained ?? 0) > 0
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white'
@@ -189,30 +200,49 @@ const MarkCell = ({
   }
 
   return (
-    <div className="p-4 flex items-center gap-4">
-      <div className="flex-1">
-        <input
-          type="number"
-          step="0.5"
-          value={att}
-          onChange={(e) => setAtt(e.target.value)}
-          onBlur={handleBlur}
-          disabled={disabled || isAbsent}
-          className="w-full bg-slate-500/5 border-transparent rounded-md px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-slate-200 dark:focus:ring-slate-800 transition-all outline-none text-center"
-          placeholder="0.0"
-        />
+    <div className={`relative p-4 transition-all duration-300 ${isAbsent ? 'bg-red-500/5' : ''}`}>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 relative flex items-center">
+            <input
+              type="number"
+              step="0.5"
+              value={att}
+              onChange={(e) => setAtt(e.target.value)}
+              onBlur={handleBlur}
+              disabled={disabled || isAbsent}
+              className="w-full bg-slate-500/5 border-transparent rounded-lg pl-3 pr-12 py-1.5 text-xs font-medium text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-slate-200 dark:focus:ring-slate-800 transition-all outline-none text-center"
+              placeholder="0.0"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400 select-none">
+              /{subject.max_marks}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <button
+            onClick={() => onAbsentToggle(!isAbsent)}
+            disabled={disabled}
+            className={`flex-1 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-[0.1em] transition-all ${
+              isAbsent
+                ? 'bg-red-500 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-red-500/10 hover:text-red-500'
+            }`}
+          >
+            {isAbsent ? 'Absent' : 'Mark ABS'}
+          </button>
+          <div className={`px-3 py-1.5 rounded-md font-black text-xs min-w-[45px] text-center ${
+            isAbsent
+              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+              : (existing?.marks_obtained ?? 0) > 0
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white'
+          }`}>
+            {isAbsent ? '0.0' : (existing?.marks_obtained ?? '0.0')}
+          </div>
+        </div>
       </div>
-      <button
-        onClick={() => onAbsentToggle(!isAbsent)}
-        disabled={disabled}
-        className={`px-4 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
-          isAbsent 
-            ? 'bg-red-500 text-white' 
-            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-red-500/10 hover:text-red-500'
-        }`}
-      >
-        ABS
-      </button>
     </div>
   );
 };
@@ -329,9 +359,9 @@ export function MarksEntryPage() {
     subjectId: string,
     data: {
       marks_obtained?: number;
-      num_attempted?: number;
-      num_unanswered?: number;
-      num_incorrect?: number;
+      num_attempted?: number | null;
+      num_unanswered?: number | null;
+      num_incorrect?: number | null;
       is_absent?: boolean;
     }
   ) => {
@@ -418,11 +448,12 @@ export function MarksEntryPage() {
 
   const handleFile = async (file: File) => {
     try {
-      const rows = await parseMarksCsv(file);
+      const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+      const rows = isExcel ? await parseOMRExcel(file) : await parseMarksCsv(file);
       const rollMap = new Map(students?.map((s) => [s.roll_number.toUpperCase(), s.id]) ?? []);
       const subjectMap = new Map(subjects.map((s) => [s.subject_name.toLowerCase().trim(), s]));
       
-      const parsed = rows.map((r) => {
+      const parsed = rows.map((r: any) => {
         const errs: string[] = [];
         const roll = (r.roll_number ?? '').toUpperCase();
         const subjName = (r.subject ?? r.subject_name ?? '').toLowerCase().trim();
@@ -436,18 +467,21 @@ export function MarksEntryPage() {
           errs.push('Not authorized');
         }
 
-        const absent = String(r.is_absent ?? '').toLowerCase() === 'true';
+        const absent = String(r.is_absent ?? '').toLowerCase() === 'true' || r.is_absent === true;
         let marks = 0;
         let att = 0, inc = 0, una = 0;
 
         if (!absent) {
-          if (sub && sub.num_questions > 0) {
+          if (sub && sub.num_questions > 0 && !isExcel) {
             att = parseInt(String(r.num_attempted ?? r.attempted ?? 0));
             inc = parseInt(String(r.num_incorrect ?? r.incorrect ?? 0));
             una = sub.num_questions - att;
             marks = calculateMarks(att, inc, sub.num_questions, sub.max_marks, test!.exam_category);
           } else {
             marks = Number(r.marks ?? r.marks_obtained ?? 0);
+            att = parseInt(String(r.num_attempted ?? r.attempted ?? 0));
+            inc = parseInt(String(r.num_incorrect ?? r.incorrect ?? 0));
+            una = parseInt(String(r.num_unanswered ?? r.unanswered ?? 0));
             if (sub && marks > sub.max_marks) errs.push(`>max(${sub.max_marks})`);
           }
         }
@@ -589,7 +623,7 @@ export function MarksEntryPage() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => setImportOpen(true)} disabled={isLocked || !canEditMarks} className="btn btn-secondary">
-              <Upload className="h-4 w-4" /> Import CSV
+              <Upload className="h-4 w-4" /> Import CSV/Excel
             </button>
 
             {/* ── Faculty buttons ── */}
@@ -771,16 +805,18 @@ export function MarksEntryPage() {
 
       <ConfirmDialog open={confirmPublish} onClose={() => setConfirmPublish(false)} onConfirm={handlePublish} title="Forward marks to admin?" message="Your marks will be submitted for admin review and approval. You cannot edit them until admin reviews and sends changes. Admin can add remarks if corrections are needed." confirmLabel="Forward Now" loading={false} />
       <ConfirmDialog open={confirmLock} onClose={() => setConfirmLock(false)} onConfirm={handleLock} title="Lock marks and generate rankings?" message="Locking is permanent. It makes all marks read-only and triggers the ranking algorithms for the entire batch. This action cannot be undone." confirmLabel="Lock & Rank" variant="destructive" loading={lockMut.isPending} />
-      <Modal open={importOpen} onClose={() => { setImportOpen(false); setParsedMarks([]); }} title="Bulk Upload Marks (CSV)" size="xl">
+      <Modal open={importOpen} onClose={() => { setImportOpen(false); setParsedMarks([]); }} title="Bulk Upload Marks" size="xl">
         <div className="space-y-6 p-2">
           <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 p-6 rounded-md border border-slate-100 dark:border-slate-800">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-slate-900 dark:text-white">Upload CSV File</p>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Columns: roll_number, subject, marks, attempted, incorrect, is_absent</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">Upload CSV or Excel File</p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                Supports standard CSV template or scanned OMR NEET/JEE Excel sheets.
+              </p>
             </div>
             <div className="flex gap-3">
               <button onClick={() => downloadMarksTemplate(subjects.map((s) => s.subject_name))} className="btn btn-secondary py-2"><Download className="h-4 w-4" /> Template</button>
-              <label className="btn btn-primary py-2 cursor-pointer"><Upload className="h-4 w-4" /> Select File<input type="file" accept=".csv" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} className="hidden" /></label>
+              <label className="btn btn-primary py-2 cursor-pointer"><Upload className="h-4 w-4" /> Select File<input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} className="hidden" /></label>
             </div>
           </div>
           {parsedMarks.length > 0 && (

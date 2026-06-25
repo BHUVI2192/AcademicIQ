@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useColleges } from '@/hooks/useColleges';
+import { useAcademicYears } from '@/hooks/useAcademicYears';
 import type { College } from '@shared';
 
 interface DirectoryContextType {
@@ -20,6 +21,7 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
   const [selectedCollegeId, setSelectedCollegeIdState] = useState<string | null>(() => {
     return localStorage.getItem('academeiq-selected-college');
   });
+  const { data: years } = useAcademicYears(selectedCollegeId);
   const [selectedAcademicYearId, setSelectedAcademicYearIdState] = useState<string | null>(() => {
     return localStorage.getItem('academeiq-selected-year');
   });
@@ -65,6 +67,21 @@ export function DirectoryProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [isGlobalMode, selectedCollegeId, colleges]);
+
+  // Auto-select current year if none selected or if selectedYear does not exist in the current college's years
+  useEffect(() => {
+    if (years && years.length > 0) {
+      const yearExists = years.some(y => y.id === selectedAcademicYearId);
+      if (!selectedAcademicYearId || !yearExists) {
+        const current = years.find(y => y.is_current);
+        if (current) {
+          setSelectedAcademicYearId(current.id);
+        } else {
+          setSelectedAcademicYearId(years[0].id);
+        }
+      }
+    }
+  }, [years, selectedAcademicYearId]);
 
   return (
     <DirectoryContext.Provider value={{ 

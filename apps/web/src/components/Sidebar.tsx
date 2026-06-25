@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import type { Role } from '@shared';
 import { cn } from '@/lib/utils';
+import { CollegeSelector } from './CollegeSelector';
+import { useAuth } from '@/hooks/useAuth';
 
 interface NavItem {
   to: string;
@@ -46,7 +48,6 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/tests', label: 'Tests', icon: ClipboardList },
   { to: '/admin/marks-entry', label: 'Marks Entry', icon: PenTool },
   { to: '/admin/rankings', label: 'Leaderboard', icon: Trophy },
-  { to: '/admin/parents', label: 'Parents', icon: BookOpen },
   { to: '/admin/audit', label: 'Audit Log', icon: ScrollText },
 ];
 
@@ -77,8 +78,26 @@ interface SidebarProps {
 }
 
 function SidebarContent({ role, onClose }: { role: Role; onClose?: () => void }) {
-  const items =
-    role === 'admin' ? ADMIN_NAV : role === 'faculty' ? FACULTY_NAV : PARENT_NAV;
+  const { profile } = useAuth();
+
+  const items = useMemo(() => {
+    if (role === 'admin') return ADMIN_NAV;
+    if (role === 'parent') return PARENT_NAV;
+
+    // role === 'faculty'
+    return FACULTY_NAV.filter((item) => {
+      if (item.to === '/faculty/students') {
+        return profile?.can_add_students ?? false;
+      }
+      if (item.to === '/faculty/attendance') {
+        return profile?.can_manage_attendance ?? false;
+      }
+      if (item.to === '/faculty/fees') {
+        return profile?.can_manage_fees ?? false;
+      }
+      return true;
+    });
+  }, [role, profile]);
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
@@ -102,7 +121,9 @@ function SidebarContent({ role, onClose }: { role: Role; onClose?: () => void })
         )}
       </div>
 
-
+      <div className="py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <CollegeSelector />
+      </div>
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">

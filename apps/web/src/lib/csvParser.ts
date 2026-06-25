@@ -10,6 +10,10 @@ export interface ParsedStudentRow {
   date_of_birth?: string;
   batch_code?: string;
   exam_wing?: 'NEET' | 'KCET' | null;
+  parent_name?: string;
+  parent_phone?: string;
+  parent_email?: string;
+  parent_relationship?: string;
   _row: number;
 }
 
@@ -39,6 +43,10 @@ export function parseStudentsCsv(file: File): Promise<ParsedStudentRow[]> {
           date_of_birth: (r.date_of_birth ?? r.dob ?? '').trim() || undefined,
           batch_code: (r.batch_code ?? r.batch ?? '').trim() || undefined,
           exam_wing: (r.exam_wing ?? r.wing ?? '').trim().toUpperCase() as any || undefined,
+          parent_name: (r.parent_name ?? r.guardian_name ?? r.parent_full_name ?? '').trim() || undefined,
+          parent_phone: (r.parent_phone ?? r.guardian_phone ?? r.parent_mobile ?? '').trim() || undefined,
+          parent_email: (r.parent_email ?? r.guardian_email ?? '').trim() || undefined,
+          parent_relationship: (r.parent_relationship ?? r.relationship ?? '').trim() || undefined,
           _row: i + 2,
         }));
         resolve(rows);
@@ -87,8 +95,26 @@ export function downloadCsv(filename: string, rows: Record<string, unknown>[]): 
 
 export function downloadStudentTemplate(): void {
   downloadCsv('student-template.csv', [
-    { roll_number: 'PUC-24-001', full_name: 'Sample Student', date_of_birth: '2008-04-15', exam_wing: 'NEET' },
-    { roll_number: 'PUC-24-002', full_name: 'Another Student', date_of_birth: '', exam_wing: 'KCET' },
+    { 
+      roll_number: 'PUC-24-001', 
+      full_name: 'Sample Student', 
+      date_of_birth: '2008-04-15', 
+      exam_wing: 'NEET',
+      parent_name: 'Robert Smith',
+      parent_phone: '9876543210',
+      parent_email: 'robert@example.com',
+      parent_relationship: 'Father'
+    },
+    { 
+      roll_number: 'PUC-24-002', 
+      full_name: 'Another Student', 
+      date_of_birth: '', 
+      exam_wing: 'KCET',
+      parent_name: 'Mary Doe',
+      parent_phone: '9876543211',
+      parent_email: '',
+      parent_relationship: 'Mother'
+    },
   ]);
 }
 

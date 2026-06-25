@@ -31,6 +31,11 @@ interface Row {
   roll_number?: string;
   full_name: string;
   date_of_birth?: string;
+  exam_wing?: string | null;
+  parent_name?: string;
+  parent_phone?: string;
+  parent_email?: string;
+  parent_relationship?: string;
 }
 
 interface Body {
@@ -44,6 +49,120 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+async function upsertParentAndLink(
+  admin: any,
+  vars: {
+    phone: string;
+    full_name: string;
+    email?: string;
+    college_id: string;
+    student_id: string;
+    relationship?: string;
+  }
+) {
+  const { phone, full_name, college_id, email, student_id, relationship } = vars;
+  
+  const normalizedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/[^0-9]/g, '')}`;
+  const internalEmail = `parent.${normalizedPhone.replace(/[^0-9]/g, '')}@academeiq.net`;
+  const tempPassword = 'Parent@123';
+
+  // 1. Check if profile exists by phone
+  const { data: existingProfile } = await admin
+    .from('profiles')
+    .select('id, role, email')
+    .eq('phone', normalizedPhone)
+    .maybeSingle();
+
+  let userId = existingProfile?.id;
+  let existingRole = existingProfile?.role;
+
+  // 2. Ensure Auth User exists
+  if (userId) {
+    await admin.auth.admin.updateUserById(userId, {
+      user_metadata: { 
+        role: existingRole || 'parent', 
+        college_id, 
+        full_name, 
+        phone: normalizedPhone 
+      }
+    });
+  } else {
+    // Check if auth user exists by internal email
+    const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const foundByEmail = users.find((u: any) => u.email === internalEmail);
+    
+    if (foundByEmail) {
+      userId = foundByEmail.id;
+    } else {
+      const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
+        email: internalEmail,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: { role: 'parent', college_id, full_name, phone: normalizedPhone }
+      });
+
+      if (createErr) {
+        if (createErr.message.includes('already registered')) {
+          const found = users.find((u: any) => u.email === internalEmail);
+          if (found) {
+            userId = found.id;
+          } else {
+            throw new Error(`User already registered but could not find ID for ${internalEmail}`);
+          }
+        } else {
+          throw createErr;
+        }
+      } else {
+        userId = newUser.user.id;
+      }
+    }
+  }
+
+  if (!userId) throw new Error('Failed to acquire parent user ID');
+
+  // 3. Upsert Profile
+  const updateData: any = {
+    id: userId,
+    college_id,
+    full_name: full_name.trim(),
+    phone: normalizedPhone,
+    temp_password_set: true,
+    is_active: true
+  };
+
+  if (!existingRole) {
+    updateData.role = 'parent';
+  }
+
+  if (email && !existingProfile?.email) {
+    updateData.email = email;
+  }
+
+  const { error: profileErr } = await admin.from('profiles').upsert(updateData);
+
+  if (profileErr) {
+    if (profileErr.code === '23505' && profileErr.message.includes('email')) {
+      delete updateData.email;
+      const { error: retryErr } = await admin.from('profiles').upsert(updateData);
+      if (retryErr) throw retryErr;
+    } else {
+      throw profileErr;
+    }
+  }
+
+  // 4. Link Student (auto-verified!)
+  const { error: mapErr } = await admin.from('parent_student_map').upsert({
+    parent_id: userId,
+    student_id,
+    relationship: relationship || 'Parent',
+    is_verified: true,
+    verified_at: new Date().toISOString()
+  }, { onConflict: 'parent_id,student_id' });
+
+  if (mapErr) throw mapErr;
+  return userId;
 }
 
 serve(async (req) => {
@@ -161,7 +280,16 @@ serve(async (req) => {
     // ====== Per-row validation ======
     console.log('[Phase 1] Starting validation loop...');
     const errors: { row: number; usn?: string; reason: string }[] = [];
-    const valid: { usn: string; full_name: string; date_of_birth: string | null }[] = [];
+    const valid: { 
+      usn: string; 
+      full_name: string; 
+      date_of_birth: string | null;
+      exam_wing: string | null;
+      parent_name: string | null;
+      parent_phone: string | null;
+      parent_email: string | null;
+      parent_relationship: string | null;
+    }[] = [];
     const seenUsns = new Set<string>();
 
     rows.forEach((r, idx) => {
@@ -169,6 +297,12 @@ serve(async (req) => {
       const usn = (r.usn || r.roll_number || '').trim().toUpperCase();
       const fullName = (r.full_name || '').trim();
       const dob = (r.date_of_birth || '').trim();
+      const examWing = (r.exam_wing || '').trim().toUpperCase();
+      
+      const parentName = (r.parent_name || '').trim();
+      const parentPhone = (r.parent_phone || '').trim();
+      const parentEmail = (r.parent_email || '').trim();
+      const parentRelationship = (r.parent_relationship || 'Parent').trim();
 
       if (!usn) {
         errors.push({ row: rowNumber, reason: 'USN/Roll Number is required' });
@@ -201,12 +335,44 @@ serve(async (req) => {
         dobValue = dob;
       }
 
+      let examWingValue: string | null = null;
+      if (examWing) {
+        if (examWing !== 'NEET' && examWing !== 'KCET') {
+          errors.push({ row: rowNumber, usn, reason: 'Exam wing must be NEET or KCET' });
+          return;
+        }
+        examWingValue = examWing;
+      }
+
+      if (!parentName) {
+        errors.push({ row: rowNumber, usn, reason: 'Parent name is required' });
+        return;
+      }
+      if (!parentPhone) {
+        errors.push({ row: rowNumber, usn, reason: 'Parent phone is required' });
+        return;
+      }
+      const digits = parentPhone.replace(/[^0-9]/g, '');
+      if (digits.length < 10) {
+        errors.push({ row: rowNumber, usn, reason: 'Parent phone number must be at least 10 digits' });
+        return;
+      }
+
       if (seenUsns.has(usn)) {
         errors.push({ row: rowNumber, usn, reason: 'Duplicate USN within upload' });
         return;
       }
       seenUsns.add(usn);
-      valid.push({ usn, full_name: fullName, date_of_birth: dobValue });
+      valid.push({ 
+        usn, 
+        full_name: fullName, 
+        date_of_birth: dobValue,
+        exam_wing: examWingValue,
+        parent_name: parentName || null,
+        parent_phone: parentPhone || null,
+        parent_email: parentEmail || null,
+        parent_relationship: parentRelationship || null
+      });
     });
 
     console.log(`[Phase 1 Result] Valid rows: ${valid.length}, Errors: ${errors.length}`);
@@ -250,6 +416,7 @@ serve(async (req) => {
         roll_number: v.usn, // Internal 'usn' variable maps to DB 'roll_number'
         full_name: v.full_name,
         date_of_birth: v.date_of_birth,
+        exam_wing: v.exam_wing,
         created_by: actorId,
         is_active: true,
       }));
@@ -257,7 +424,7 @@ serve(async (req) => {
       const { data: insertResult, error: insertErr } = await admin
         .from('students')
         .insert(payload)
-        .select('id');
+        .select('id, roll_number');
 
       if (insertErr) {
         console.error('[Phase 3 Error] Bulk insert failed:', insertErr);
@@ -267,13 +434,48 @@ serve(async (req) => {
       inserted = insertResult?.length ?? 0;
       console.log(`[Phase 3 Result] Successfully inserted ${inserted} students.`);
 
+      // ====== Map inserted students and create parent accounts ======
+      const rollToIdMap = new Map<string, string>();
+      insertResult?.forEach((s: any) => {
+        rollToIdMap.set(s.roll_number.toUpperCase(), s.id);
+      });
+
+      console.log('[Phase 4] Creating and linking parent accounts...');
+      let parentSuccessCount = 0;
+      let parentErrorCount = 0;
+      for (const v of valid) {
+        const studentId = rollToIdMap.get(v.usn);
+        if (studentId && v.parent_phone && v.parent_name) {
+          try {
+            await upsertParentAndLink(admin, {
+              phone: v.parent_phone,
+              full_name: v.parent_name,
+              email: v.parent_email || undefined,
+              college_id,
+              student_id: studentId,
+              relationship: v.parent_relationship || undefined,
+            });
+            parentSuccessCount++;
+          } catch (err: any) {
+            console.error(`Failed to link parent for student USN ${v.usn}:`, err);
+            parentErrorCount++;
+            errors.push({ 
+              row: -1, 
+              usn: v.usn, 
+              reason: `Linked parent account creation failed: ${err.message || err}` 
+            });
+          }
+        }
+      }
+      console.log(`[Phase 4 Result] Parent accounts created/linked: ${parentSuccessCount}, failed: ${parentErrorCount}`);
+
       try {
         await admin.from('audit_log').insert({
           college_id,
           actor_id: actorId,
           action: 'students.bulk_upload',
           entity_type: 'students',
-          new_value: { batch_id, inserted, error_count: errors.length },
+          new_value: { batch_id, inserted, error_count: errors.length, parents_linked: parentSuccessCount },
         });
       } catch (logErr) {
         console.warn('Failed to write audit log (non-critical):', logErr);

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Users, Upload, Download, Search } from 'lucide-react';
+import { Plus, Users, Upload, Download, Search, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudents, useCreateStudent } from '@/hooks/useStudents';
 import { useFacultyAssignedBatches } from '@/hooks/useBatches';
@@ -77,6 +77,18 @@ export function StudentsPage() {
       setBatchId('');
     } catch (err: any) {
       toast.error(err.message ?? 'Failed');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this student? This action cannot be undone.')) return;
+    try {
+      const { error } = await supabase.from('students').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Student deleted');
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to delete student');
     }
   };
 
@@ -204,6 +216,7 @@ export function StudentsPage() {
                   <th>Roll No.</th>
                   <th>Name</th>
                   <th>Status</th>
+                  <th className="text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,6 +230,11 @@ export function StudentsPage() {
                       ) : (
                         <Badge>Inactive</Badge>
                       )}
+                    </td>
+                    <td className="text-right">
+                      <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded-md bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100" title="Delete Student">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}

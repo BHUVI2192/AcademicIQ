@@ -87,3 +87,19 @@ export function useSetCurrentAcademicYear() {
   });
 }
 
+export function useDeleteAcademicYear() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('academic_years')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['academic-years'] });
+    },
+  });
+}
+

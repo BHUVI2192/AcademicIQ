@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, GraduationCap, Folder, FolderOpen, ChevronRight, ChevronDown, LayoutGrid, List } from 'lucide-react';
+import { Plus, GraduationCap, Folder, FolderOpen, ChevronRight, ChevronDown, LayoutGrid, List, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectory } from '@/context/DirectoryContext';
-import { useBatches, useCreateBatch } from '@/hooks/useBatches';
+import { useBatches, useCreateBatch, useDeleteBatch } from '@/hooks/useBatches';
 import { useColleges } from '@/hooks/useColleges';
 import { useAcademicYears } from '@/hooks/useAcademicYears';
 import { Modal } from '@/components/Modal';
@@ -49,6 +49,17 @@ export function BatchesPage() {
 
   const { data: years } = useAcademicYears(targetCollegeId || effectiveCollegeId);
   const create = useCreateBatch();
+  const deleteBatch = useDeleteBatch();
+
+  const handleDeleteBatch = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete batch "${name}"? This action cannot be undone.`)) return;
+    try {
+      await deleteBatch.mutateAsync(id);
+      toast.success('Batch deleted successfully');
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to delete batch. It may have associated records (students, attendance, tests).');
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -163,6 +174,9 @@ export function BatchesPage() {
                   <th className="px-8 py-6 text-center border-b border-academic-navy/5">
                     <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Status</span>
                   </th>
+                  <th className="px-8 py-6 text-right border-b border-academic-navy/5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-academic-navy/60">Management</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-academic-navy/5">
@@ -198,6 +212,15 @@ export function BatchesPage() {
                       ) : (
                         <Badge className="bg-slate-100 text-slate-500 border-slate-200 font-bold uppercase text-[10px] px-4 py-1.5 rounded-full">Inactive</Badge>
                       )}
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <button
+                        onClick={() => handleDeleteBatch(b.id, b.name)}
+                        className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 inline-flex items-center"
+                        title="Delete Batch"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -329,6 +352,13 @@ export function BatchesPage() {
                                                   ) : (
                                                     <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">Inactive</span>
                                                   )}
+                                                  <button
+                                                    onClick={() => handleDeleteBatch(b.id, b.name)}
+                                                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                                                    title="Delete Batch"
+                                                  >
+                                                    <Trash2 className="h-4 w-4" />
+                                                  </button>
                                                 </div>
                                               </div>
                                             ))}

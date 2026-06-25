@@ -54,7 +54,7 @@ export function PermissionsPage() {
       if (error) throw error;
       toast.success('Permissions updated successfully');
       setEditingFacultyId(null);
-      queryClient.invalidateQueries({ queryKey: ['faculty'] });
+      queryClient.invalidateQueries({ queryKey: ['faculty-list'] });
     } catch (err: any) {
       toast.error(err.message ?? 'Failed to update permissions');
     } finally {

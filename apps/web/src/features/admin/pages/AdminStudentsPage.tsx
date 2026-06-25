@@ -9,12 +9,13 @@ import {
 } from 'lucide-react';
 import { useDirectory } from '@/context/DirectoryContext';
 import { useStudents, useCreateStudent } from '@/hooks/useStudents';
+import { useCreateParent } from '@/hooks/useParents';
 import { useBatches } from '@/hooks/useBatches';
 import { Modal } from '@/components/Modal';
 import { Badge } from '@/components/Badge';
 import { TableSkeleton } from '@/components/LoadingSkeleton';
 import { EmptyState } from '@/components/EmptyState';
-import { isRollNumber, isDateIso } from '@/lib/validators';
+import { isRollNumber, isDateIso, isPhone, normalizePhone } from '@/lib/validators';
 import { parseStudentsCsv, downloadStudentTemplate } from '@/lib/csvParser';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,6 +26,10 @@ interface ParsedRow {
   full_name: string;
   date_of_birth?: string;
   exam_wing?: string | null;
+  parent_name?: string;
+  parent_phone?: string;
+  parent_email?: string;
+  parent_relationship?: string;
   __error?: string;
 }
 
@@ -53,6 +58,13 @@ export function AdminStudentsPage() {
   const [examWing, setExamWing] = useState<'NEET' | 'KCET' | ''>('');
   const [targetCollegeId, setTargetCollegeId] = useState<string>('');
   const [batchId, setBatchId] = useState('');
+
+  const [parentPhone, setParentPhone] = useState('');
+  const [parentName, setParentName] = useState('');
+  const [parentEmail, setParentEmail] = useState('');
+  const [parentRelationship, setParentRelationship] = useState('Parent');
+
+  const createParent = useCreateParent();
 
   const { data: colleges } = useColleges();
   const { data: modalBatches } = useBatches(targetCollegeId || selectedCollegeId || undefined);
@@ -85,8 +97,22 @@ export function AdminStudentsPage() {
       toast.error('Fill all required fields');
       return;
     }
+
+    if (!parentName.trim()) {
+      toast.error('Parent name is required');
+      return;
+    }
+    if (!parentPhone.trim()) {
+      toast.error('Parent phone is required');
+      return;
+    }
+    if (!isPhone(parentPhone)) {
+      toast.error('Enter a valid phone number (e.g. +919876543210)');
+      return;
+    }
+
     try {
-      await create.mutateAsync({
+      const student = await create.mutateAsync({
         college_id: collegeId,
         batch_id: batchId,
         roll_number: rollNumber.toUpperCase(),
@@ -94,15 +120,29 @@ export function AdminStudentsPage() {
         date_of_birth: dob || undefined,
         exam_wing: examWing || undefined,
       });
-      toast.success('Student added successfully');
+
+      await createParent.mutateAsync({
+        phone: normalizePhone(parentPhone),
+        full_name: parentName.trim(),
+        email: parentEmail.trim() || undefined,
+        college_id: collegeId,
+        student_id: student.id,
+        relationship: parentRelationship,
+      });
+      toast.success('Student and Parent registered successfully (Parent auto-verified)');
+
       setCreateOpen(false);
       setRollNumber('');
       setFullName('');
       setDob('');
       setBatchId('');
       setExamWing('');
+      setParentPhone('');
+      setParentName('');
+      setParentEmail('');
+      setParentRelationship('Parent');
     } catch (err: any) {
-      toast.error(err.message ?? 'Failed to add student');
+      toast.error(err.message ?? 'Failed to register student');
     }
   };
 
@@ -115,6 +155,14 @@ export function AdminStudentsPage() {
         if (!r.roll_number || !isRollNumber(r.roll_number)) errors.push('Invalid Roll Number');
         if (!r.full_name?.trim()) errors.push('Name required');
         if (r.date_of_birth && !isDateIso(r.date_of_birth)) errors.push('Bad DOB');
+        
+        if (!r.parent_name?.trim()) errors.push('Parent name required');
+        if (!r.parent_phone) {
+          errors.push('Parent phone required');
+        } else if (r.parent_phone.replace(/[^0-9]/g, '').length < 10) {
+          errors.push('Parent phone must be >= 10 digits');
+        }
+
         const key = (r.roll_number ?? '').toUpperCase();
         if (seen.has(key)) errors.push('Duplicate in file');
         seen.add(key);
@@ -142,6 +190,10 @@ export function AdminStudentsPage() {
             full_name: r.full_name,
             date_of_birth: r.date_of_birth ?? null,
             exam_wing: r.exam_wing ?? null,
+            parent_name: r.parent_name ?? null,
+            parent_phone: r.parent_phone ?? null,
+            parent_email: r.parent_email ?? null,
+            parent_relationship: r.parent_relationship ?? null,
           })),
         },
       });
@@ -352,12 +404,7 @@ export function AdminStudentsPage() {
                                 </div>
                               ))
                             ) : (
-                              <button 
-                                onClick={() => navigate('/admin/parents', { state: { rollNumber: s.roll_number, batchId: s.batch_id } })}
-                                className="text-[11px] font-bold uppercase tracking-widest text-academic-blue/60 hover:text-academic-blue transition-colors underline underline-offset-4 decoration-2"
-                              >
-                                + Link Guardian
-                              </button>
+                              <span className="text-[10px] font-bold text-red-500 italic">No Parent Linked</span>
                             )}
                           </div>
                         </td>
@@ -378,8 +425,8 @@ export function AdminStudentsPage() {
                           </button>
                         </td>
                         <td className="px-8 py-6 text-right">
-                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                            <button onClick={() => handleDelete(s.id)} className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100">
+                          <div className="flex justify-end gap-2 transition-all">
+                            <button onClick={() => handleDelete(s.id)} className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100" title="Delete Student">
                               <Trash2 className="h-4.5 w-4.5" />
                             </button>
                           </div>
@@ -473,6 +520,67 @@ export function AdminStudentsPage() {
             </select>
           </div>
 
+          {/* Parent Details Section */}
+          <div className="pt-6 border-t border-academic-navy/5 space-y-4">
+            <div className="inline-flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-academic-yellow" />
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.1em] text-academic-navy">Guardian Details</h4>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Guardian Name</label>
+                <input
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  className="input-premium w-full"
+                  placeholder="e.g. Robert Smith"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Guardian Phone</label>
+                <input
+                  type="tel"
+                  value={parentPhone}
+                  onChange={(e) => setParentPhone(e.target.value)}
+                  className="input-premium w-full"
+                  placeholder="+91 98765 43210"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Guardian Email</label>
+                <input
+                  type="email"
+                  value={parentEmail}
+                  onChange={(e) => setParentEmail(e.target.value)}
+                  className="input-premium w-full"
+                  placeholder="parent@domain.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Relationship</label>
+                <select
+                  value={parentRelationship}
+                  onChange={(e) => setParentRelationship(e.target.value)}
+                  className="input-premium w-full"
+                >
+                  <option value="Parent">Parent</option>
+                  <option value="father">Father</option>
+                  <option value="mother">Mother</option>
+                  <option value="guardian">Guardian</option>
+                </select>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground/60 italic">
+              * Note: Registering a student will automatically create a verified parent account with default password Parent@123.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-3 pt-6">
             <button type="button" onClick={() => setCreateOpen(false)} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">Discard</button>
             <button type="submit" disabled={create.isPending} className="btn-premium btn-primary px-10">
@@ -489,8 +597,26 @@ export function AdminStudentsPage() {
             <div className="space-y-3 text-center md:text-left">
               <p className="text-2xl font-bold text-academic-navy leading-tight">Data Ingestion Engine</p>
               <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                {['roll_number', 'full_name', 'date_of_birth'].map(col => (
-                  <span key={col} className="px-2 py-0.5 rounded bg-academic-navy/5 text-[10px] font-bold uppercase tracking-wider text-academic-navy/60 border border-academic-navy/5">{col}</span>
+                {[
+                  { label: 'roll_number', req: true },
+                  { label: 'full_name', req: true },
+                  { label: 'date_of_birth', req: false },
+                  { label: 'exam_wing', req: false },
+                  { label: 'parent_name', req: true },
+                  { label: 'parent_phone', req: true },
+                  { label: 'parent_email', req: false },
+                  { label: 'parent_relationship', req: false }
+                ].map(col => (
+                  <span 
+                    key={col.label} 
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
+                      col.req 
+                        ? "bg-academic-blue/5 text-academic-blue border-academic-blue/20" 
+                        : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-800/40 dark:border-slate-800"
+                    }`}
+                  >
+                    {col.label}{col.req ? '' : ' (opt)'}
+                  </span>
                 ))}
               </div>
             </div>
@@ -526,7 +652,8 @@ export function AdminStudentsPage() {
                   <thead className="bg-academic-navy/[0.01] sticky top-0">
                     <tr>
                       <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40">Student ID</th>
-                      <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40">Full Identity</th>
+                      <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40">Student Details</th>
+                      <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40">Guardian Details</th>
                       <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-academic-navy/40 text-right">Validation</th>
                     </tr>
                   </thead>
@@ -534,7 +661,28 @@ export function AdminStudentsPage() {
                     {parsedRows.map((r, i) => (
                       <tr key={i} className={r.__error ? 'bg-red-50/50' : 'hover:bg-academic-navy/[0.01]'}>
                         <td className="px-8 py-4 font-mono font-bold text-[11px] text-muted-foreground">{r.roll_number}</td>
-                        <td className="px-8 py-4 text-sm font-bold text-academic-navy">{r.full_name}</td>
+                        <td className="px-8 py-4">
+                          <div className="font-bold text-academic-navy text-sm">{r.full_name}</div>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {r.date_of_birth && <span className="text-[10px] text-muted-foreground">DOB: {r.date_of_birth}</span>}
+                            {r.exam_wing && (
+                              <span className="px-1.5 py-0.5 rounded bg-academic-blue/10 text-academic-blue text-[9px] font-bold uppercase border border-academic-blue/20">
+                                {r.exam_wing}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-8 py-4">
+                          {r.parent_phone ? (
+                            <div className="space-y-0.5">
+                              <div className="font-bold text-academic-navy text-xs">{r.parent_name} ({r.parent_relationship || 'Parent'})</div>
+                              <div className="text-[10px] text-muted-foreground font-medium">{r.parent_phone}</div>
+                              {r.parent_email && <div className="text-[10px] text-muted-foreground/60">{r.parent_email}</div>}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/40 italic">None</span>
+                          )}
+                        </td>
                         <td className="px-8 py-4 text-right">
                           {r.__error 
                             ? <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{r.__error}</span> 

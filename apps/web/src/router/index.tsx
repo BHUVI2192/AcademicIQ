@@ -18,7 +18,6 @@ import { BatchesPage } from '@/features/admin/pages/BatchesPage';
 import { FacultyPage } from '@/features/admin/pages/FacultyPage';
 import { PermissionsPage } from '@/features/admin/pages/PermissionsPage';
 import { ParentLinkingPage } from '@/features/admin/pages/ParentLinkingPage';
-import { ParentsPage } from '@/features/admin/pages/ParentsPage';
 import { AuditLogPage } from '@/features/admin/pages/AuditLogPage';
 import { AdminStudentsPage } from '@/features/admin/pages/AdminStudentsPage';
 import { AdminTestsPage } from '@/features/admin/pages/AdminTestsPage';
@@ -44,6 +43,8 @@ import { ProgressPage } from '@/features/parent/pages/ProgressPage';
 import { ReportsPage } from '@/features/parent/pages/ReportsPage';
 import { ParentFeesPage } from '@/features/parent/pages/ParentFeesPage';
 import { ParentAttendancePage } from '@/features/parent/pages/ParentAttendancePage';
+
+import { RequireFacultyPermission } from './RequireFacultyPermission';
 
 export function AppRouter() {
   return (
@@ -108,7 +109,6 @@ export function AppRouter() {
         <Route path="tests/:id/rankings" element={<RankingsPage />} />
         <Route path="rankings" element={<RankingsPage />} />
         <Route path="marks-approval" element={<MarksApprovalPage />} />
-        <Route path="parents" element={<ParentsPage />} />
         <Route path="audit" element={<AuditLogPage />} />
       </Route>
 
@@ -126,9 +126,30 @@ export function AppRouter() {
         <Route index element={<Navigate to="/faculty/dashboard" replace />} />
         <Route path="analytics" element={<FacultyAnalyticsPage />} />
         <Route path="dashboard" element={<FacultyDashboardPage />} />
-        <Route path="students" element={<StudentsPage />} />
-        <Route path="attendance" element={<FacultyAttendancePage />} />
-        <Route path="fees" element={<FacultyFeesPage />} />
+        <Route
+          path="students"
+          element={
+            <RequireFacultyPermission permission="can_add_students">
+              <StudentsPage />
+            </RequireFacultyPermission>
+          }
+        />
+        <Route
+          path="attendance"
+          element={
+            <RequireFacultyPermission permission="can_manage_attendance">
+              <FacultyAttendancePage />
+            </RequireFacultyPermission>
+          }
+        />
+        <Route
+          path="fees"
+          element={
+            <RequireFacultyPermission permission="can_manage_fees">
+              <FacultyFeesPage />
+            </RequireFacultyPermission>
+          }
+        />
         <Route path="tests" element={<TestsPage />} />
         <Route path="tests/:id/marks" element={<MarksEntryPage />} />
         <Route path="tests/:id/rankings" element={<RankingsPage />} />

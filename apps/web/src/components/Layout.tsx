@@ -1,13 +1,18 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Layout() {
-  const { role } = useAuth();
+  const { role, refreshProfile } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    refreshProfile().catch(console.error);
+  }, [location.pathname, refreshProfile]);
 
   if (!role) return null;
   return (
