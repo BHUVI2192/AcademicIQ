@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useDirectory } from '@/context/DirectoryContext';
 import { useStudents, useCreateStudent } from '@/hooks/useStudents';
-import { useCreateParent } from '@/hooks/useParents';
+import { useCreateParent, useUpdateParent } from '@/hooks/useParents';
 import { useBatches } from '@/hooks/useBatches';
 import { Modal } from '@/components/Modal';
 import { Badge } from '@/components/Badge';
@@ -51,6 +51,7 @@ export function AdminStudentsPage() {
 
   const { data: batches } = useBatches(selectedCollegeId ?? undefined);
   const create = useCreateStudent();
+  const updateParent = useUpdateParent();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [rollNumber, setRollNumber] = useState('');
@@ -74,6 +75,15 @@ export function AdminStudentsPage() {
   const [importBatchId, setImportBatchId] = useState('');
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  // Edit parent state
+  const [editParentOpen, setEditParentOpen] = useState(false);
+  const [editParentId, setEditParentId] = useState('');
+  const [editMappingId, setEditMappingId] = useState('');
+  const [editParentName, setEditParentName] = useState('');
+  const [editParentEmail, setEditParentEmail] = useState('');
+  const [editParentRelationship, setEditParentRelationship] = useState('guardian');
+  const [editParentSaving, setEditParentSaving] = useState(false);
 
   const filtered = useMemo(() => students ?? [], [students]);
   const validRows = useMemo(() => parsedRows.filter((r) => !r.__error), [parsedRows]);
@@ -255,6 +265,36 @@ export function AdminStudentsPage() {
     }
   };
 
+  const openEditParent = (mapping: any) => {
+    setEditParentId(mapping.parent?.id ?? mapping.parent_id ?? '');
+    setEditMappingId(mapping.id);
+    setEditParentName(mapping.parent?.full_name ?? '');
+    setEditParentEmail(mapping.parent?.email ?? '');
+    setEditParentRelationship(mapping.relationship ?? 'guardian');
+    setEditParentOpen(true);
+  };
+
+  const handleEditParentSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editParentName.trim()) { toast.error('Name is required'); return; }
+    setEditParentSaving(true);
+    try {
+      await updateParent.mutateAsync({
+        parentId: editParentId,
+        full_name: editParentName,
+        email: editParentEmail || undefined,
+        mappingId: editMappingId,
+        relationship: editParentRelationship,
+      });
+      toast.success('Parent details updated');
+      setEditParentOpen(false);
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to update parent');
+    } finally {
+      setEditParentSaving(false);
+    }
+  };
+
   return (
     <div className="max-w-[1600px] mx-auto space-y-12 animate-fade-in pb-12">
       {/* Editorial Header */}
@@ -403,6 +443,13 @@ export function AdminStudentsPage() {
                                   ) : (
                                     <div className="w-1.5 h-1.5 rounded-full bg-academic-yellow animate-pulse" title="Verification Pending" />
                                   )}
+                                  <button
+                                    onClick={() => openEditParent(m)}
+                                    className="opacity-0 group-hover/parent:opacity-100 p-0.5 rounded text-academic-blue/60 hover:text-academic-blue hover:bg-academic-blue/10 transition-all"
+                                    title="Edit parent details"
+                                  >
+                                    <Edit2 className="h-2.5 w-2.5" />
+                                  </button>
                                 </div>
                               ))
                             ) : (
@@ -705,6 +752,69 @@ export function AdminStudentsPage() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* ── Edit Parent Modal ── */}
+      <Modal open={editParentOpen} onClose={() => setEditParentOpen(false)} title="Edit Parent Details" size="sm">
+        <form onSubmit={handleEditParentSave} className="space-y-5 py-4">
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Full Name</label>
+            <input
+              value={editParentName}
+              onChange={(e) => setEditParentName(e.target.value)}
+              className="input-premium w-full"
+              placeholder="e.g. Robert Smith"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">
+              Recovery Email <span className="opacity-40 font-normal ml-1">(Optional)</span>
+            </label>
+            <input
+              type="email"
+              value={editParentEmail}
+              onChange={(e) => setEditParentEmail(e.target.value)}
+              className="input-premium w-full"
+              placeholder="parent@domain.com"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Relationship</label>
+            <select
+              value={editParentRelationship}
+              onChange={(e) => setEditParentRelationship(e.target.value)}
+              className="input-premium w-full font-bold"
+            >
+              <option value="father">Father</option>
+              <option value="mother">Mother</option>
+              <option value="guardian">Guardian</option>
+            </select>
+          </div>
+
+          <div className="rounded-xl bg-academic-blue/5 border border-academic-blue/10 p-3 text-[10px] font-bold text-academic-navy/50 uppercase tracking-wide">
+            Note: Phone number (login credential) cannot be changed. Contact system admin for phone updates.
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setEditParentOpen(false)}
+              className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editParentSaving}
+              className="btn-premium btn-primary px-10"
+            >
+              {editParentSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );
