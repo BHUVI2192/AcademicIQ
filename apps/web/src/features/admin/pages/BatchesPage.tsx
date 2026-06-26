@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, GraduationCap, Folder, FolderOpen, ChevronRight, ChevronDown, LayoutGrid, List, Trash2 } from 'lucide-react';
+import { Plus, GraduationCap, Folder, FolderOpen, ChevronRight, ChevronDown, LayoutGrid, List, Trash2, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectory } from '@/context/DirectoryContext';
-import { useBatches, useCreateBatch, useDeleteBatch } from '@/hooks/useBatches';
+import { useBatches, useCreateBatch, useUpdateBatch, useDeleteBatch } from '@/hooks/useBatches';
 import { useColleges } from '@/hooks/useColleges';
 import { useAcademicYears } from '@/hooks/useAcademicYears';
 import { Modal } from '@/components/Modal';
 import { Badge } from '@/components/Badge';
 import { TableSkeleton } from '@/components/LoadingSkeleton';
 import { EmptyState } from '@/components/EmptyState';
-import { STREAMS, CLASS_LEVELS, type Stream, type ClassLevel } from '@shared';
+import { STREAMS, CLASS_LEVELS, type Stream, type ClassLevel, type Batch } from '@shared';
 
 export function BatchesPage() {
   const { role } = useAuth();
@@ -21,12 +21,15 @@ export function BatchesPage() {
   const { data: colleges } = useColleges();
   
   const [open, setOpen] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+  
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [classLevel, setClassLevel] = useState<ClassLevel>(11);
   const [stream, setStream] = useState<Stream>('PCMB');
   const [academicYearId, setAcademicYearId] = useState('');
   const [targetCollegeId, setTargetCollegeId] = useState<string>('');
+  const [isActive, setIsActive] = useState(true);
 
   const [viewMode, setViewMode] = useState<'folder' | 'table'>('folder');
   const [expandedPaths, setExpandedPaths] = useState<Record<string, boolean>>({});
@@ -49,6 +52,7 @@ export function BatchesPage() {
 
   const { data: years } = useAcademicYears(targetCollegeId || effectiveCollegeId);
   const create = useCreateBatch();
+  const updateBatch = useUpdateBatch();
   const deleteBatch = useDeleteBatch();
 
   const handleDeleteBatch = async (id: string, name: string) => {
@@ -61,14 +65,50 @@ export function BatchesPage() {
     }
   };
 
+  const handleEditClick = (b: Batch) => {
+    setEditingBatch(b);
+    setName(b.name);
+    setCode(b.code);
+    setClassLevel(b.class_level ?? 11);
+    setStream(b.stream ?? 'PCMB');
+    setAcademicYearId(b.academic_year_id);
+    setTargetCollegeId(b.college_id);
+    setIsActive(b.is_active);
+    setOpen(true);
+  };
+
+  const handleNewClassClick = () => {
+    setEditingBatch(null);
+    setName('');
+    setCode('');
+    setClassLevel(11);
+    setStream('PCMB');
+    setAcademicYearId(selectedAcademicYearId || '');
+    setTargetCollegeId(selectedCollegeId || '');
+    setIsActive(true);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingBatch(null);
+    setName('');
+    setCode('');
+    setClassLevel(11);
+    setStream('PCMB');
+    setAcademicYearId('');
+    setTargetCollegeId('');
+    setIsActive(true);
+  };
+
   useEffect(() => {
-    if (open) {
+    if (open && !editingBatch) {
       if (selectedCollegeId) setTargetCollegeId(selectedCollegeId);
       if (selectedAcademicYearId) setAcademicYearId(selectedAcademicYearId);
     }
-  }, [open, selectedCollegeId, selectedAcademicYearId]);
+  }, [open, editingBatch, selectedCollegeId, selectedAcademicYearId]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetCollegeId) {
       toast.error('Please select a college');
@@ -80,23 +120,34 @@ export function BatchesPage() {
     }
     
     try {
-      await create.mutateAsync({
-        college_id: targetCollegeId,
-        academic_year_id: academicYearId,
-        name: name.trim(),
-        code: code.trim().toUpperCase(),
-        class_level: classLevel,
-        stream,
-      });
-      toast.success('Batch created');
-      setOpen(false);
-      setName('');
-      setCode('');
-      setClassLevel(11);
-      setStream('PCMB');
-      setAcademicYearId('');
+      if (editingBatch) {
+        await updateBatch.mutateAsync({
+          id: editingBatch.id,
+          patch: {
+            college_id: targetCollegeId,
+            academic_year_id: academicYearId,
+            name: name.trim(),
+            code: code.trim().toUpperCase(),
+            class_level: classLevel,
+            stream,
+            is_active: isActive,
+          }
+        });
+        toast.success('Batch updated successfully');
+      } else {
+        await create.mutateAsync({
+          college_id: targetCollegeId,
+          academic_year_id: academicYearId,
+          name: name.trim(),
+          code: code.trim().toUpperCase(),
+          class_level: classLevel,
+          stream,
+        });
+        toast.success('Batch created successfully');
+      }
+      handleClose();
     } catch (err: any) {
-      toast.error(err.message ?? 'Failed');
+      toast.error(err.message ?? 'Failed to save batch');
     }
   };
 
@@ -134,7 +185,7 @@ export function BatchesPage() {
               <List className="h-4 w-4" />
             </button>
           </div>
-          <button onClick={() => setOpen(true)} className="btn-premium btn-primary px-8">
+          <button onClick={handleNewClassClick} className="btn-premium btn-primary px-8">
             <Plus className="h-4 w-4 mr-2" /> New Class
           </button>
         </div>
@@ -151,7 +202,7 @@ export function BatchesPage() {
               icon={GraduationCap}
               title="No classes defined"
               description="Create your first academic cohort to start organizing students and curriculum."
-              action={{ label: 'Create Class', onClick: () => setOpen(true) }}
+              action={{ label: 'Create Class', onClick: handleNewClassClick }}
             />
           </div>
         ) : viewMode === 'table' ? (
@@ -214,13 +265,22 @@ export function BatchesPage() {
                       )}
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <button
-                        onClick={() => handleDeleteBatch(b.id, b.name)}
-                        className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 inline-flex items-center"
-                        title="Delete Batch"
-                      >
-                        <Trash2 className="h-4.5 w-4.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-2 inline-flex">
+                        <button
+                          onClick={() => handleEditClick(b)}
+                          className="p-2.5 rounded-xl bg-academic-blue/5 text-academic-blue hover:bg-academic-blue hover:text-white transition-all shadow-sm border border-academic-blue/10 inline-flex items-center"
+                          title="Edit Batch"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBatch(b.id, b.name)}
+                          className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 inline-flex items-center"
+                          title="Delete Batch"
+                        >
+                          <Trash2 className="h-4.5 w-4.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -346,12 +406,19 @@ export function BatchesPage() {
                                                   </div>
                                                 </div>
                                                 
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2">
                                                   {b.is_active ? (
                                                     <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">Active</span>
                                                   ) : (
                                                     <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">Inactive</span>
                                                   )}
+                                                  <button
+                                                    onClick={() => handleEditClick(b)}
+                                                    className="p-1.5 text-academic-blue hover:bg-academic-blue/10 rounded-md transition-colors"
+                                                    title="Edit Batch"
+                                                  >
+                                                    <Pencil className="h-4 w-4" />
+                                                  </button>
                                                   <button
                                                     onClick={() => handleDeleteBatch(b.id, b.name)}
                                                     className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
@@ -384,11 +451,11 @@ export function BatchesPage() {
 
       <Modal 
         open={open} 
-        onClose={() => setOpen(false)} 
-        title="Institutional Class Creation"
+        onClose={handleClose} 
+        title={editingBatch ? "Edit Academic Class / Batch" : "Institutional Class Creation"}
         size="md"
       >
-        <form onSubmit={handleCreate} className="space-y-6 py-4">
+        <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {isGlobalMode && (
             <div className="space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Affiliated Institution</label>
@@ -484,12 +551,29 @@ export function BatchesPage() {
             </select>
           </div>
 
+          {editingBatch && (
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Class Status</label>
+              <select
+                value={isActive ? 'true' : 'false'}
+                onChange={(e) => setIsActive(e.target.value === 'true')}
+                className="input-premium w-full font-bold"
+                required
+              >
+                <option value="true" className="text-emerald-600 font-semibold">Active (Available for Student enrollment and Tests)</option>
+                <option value="false" className="text-slate-500 font-semibold">Inactive (Archived)</option>
+              </select>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-6">
-            <button type="button" onClick={() => setOpen(false)} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">
+            <button type="button" onClick={handleClose} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">
               Discard
             </button>
-            <button type="submit" disabled={create.isPending} className="btn-premium btn-primary px-10">
-              {create.isPending ? 'Registering...' : 'Confirm Registration'}
+            <button type="submit" disabled={create.isPending || updateBatch.isPending} className="btn-premium btn-primary px-10">
+              {editingBatch 
+                ? (updateBatch.isPending ? 'Saving Changes...' : 'Save Changes') 
+                : (create.isPending ? 'Registering...' : 'Confirm Registration')}
             </button>
           </div>
         </form>
