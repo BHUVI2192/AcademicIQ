@@ -142,6 +142,48 @@ export function useCreateParent() {
   });
 }
 
+export interface UpdateParentVars {
+  parentId: string;
+  full_name: string;
+  email?: string;
+  mappingId?: string;        // if updating relationship on a specific mapping
+  relationship?: string;
+}
+
+export function useUpdateParent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: UpdateParentVars) => {
+      const { parentId, full_name, email, mappingId, relationship } = vars;
+
+      // Update the profile (name + email)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: full_name.trim(),
+          ...(email !== undefined ? { email: email.trim() || null } : {}),
+        })
+        .eq('id', parentId);
+
+      if (profileError) throw profileError;
+
+      // Optionally update relationship in the mapping
+      if (mappingId && relationship) {
+        const { error: mapError } = await supabase
+          .from('parent_student_map')
+          .update({ relationship })
+          .eq('id', mappingId);
+        if (mapError) throw mapError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['parents-list'] });
+      queryClient.invalidateQueries({ queryKey: ['parent-mappings'] });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    },
+  });
+}
+
 export function useLinkParentStudent() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
-import { Plus, Users, ShieldCheck, ShieldOff, Trash2, Folder, ChevronLeft, GraduationCap, Phone, RefreshCcw } from 'lucide-react';
+import { Plus, Users, ShieldCheck, ShieldOff, Trash2, Folder, ChevronLeft, GraduationCap, Phone, RefreshCcw, Edit2 } from 'lucide-react';
 import {
   useParentsList,
   useParentStudentMappings,
@@ -10,6 +10,7 @@ import {
   useToggleMappingVerified,
   useUnlinkParentStudent,
   useCreateParent,
+  useUpdateParent,
 } from '@/hooks/useParents';
 import { useColleges } from '@/hooks/useColleges';
 import { useStudents } from '@/hooks/useStudents';
@@ -40,6 +41,15 @@ export function ParentsPage() {
   const [creating, setCreating] = useState(false);
   const [batchFilter, setBatchFilter] = useState('');
 
+  // Edit parent state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editParentId, setEditParentId] = useState('');
+  const [editMappingId, setEditMappingId] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editRelationship, setEditRelationship] = useState('guardian');
+  const [editSaving, setEditSaving] = useState(false);
+
   const queryClient = useQueryClient();
   const { data: colleges } = useColleges();
   const lookupCollegeId = targetCollegeId || effectiveCollegeId || undefined;
@@ -49,6 +59,7 @@ export function ParentsPage() {
   const { data: students, refetch: refetchStudents } = useStudents({ collegeId: lookupCollegeId });
   const { data: batches } = useBatches(lookupCollegeId);
   const link = useLinkParentStudent();
+  const updateParent = useUpdateParent();
   const create = useCreateParent();
   const toggle = useToggleMappingVerified();
   const unlink = useUnlinkParentStudent();
@@ -132,6 +143,36 @@ export function ParentsPage() {
       toast.error(err.message ?? 'Failed to create parent');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const openEditParent = (m: any) => {
+    setEditParentId(m.parent?.id ?? m.parent_id);
+    setEditMappingId(m.id);
+    setEditName(m.parent?.full_name ?? '');
+    setEditEmail(m.parent?.email ?? '');
+    setEditRelationship(m.relationship ?? 'guardian');
+    setEditOpen(true);
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editName.trim()) { toast.error('Name is required'); return; }
+    setEditSaving(true);
+    try {
+      await updateParent.mutateAsync({
+        parentId: editParentId,
+        full_name: editName,
+        email: editEmail || undefined,
+        mappingId: editMappingId,
+        relationship: editRelationship,
+      });
+      toast.success('Parent details updated successfully');
+      setEditOpen(false);
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to update parent');
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -322,6 +363,13 @@ export function ParentsPage() {
                                       <Badge className="bg-amber-100 text-amber-700 border-none font-bold uppercase text-[8px] px-2">Pending</Badge>
                                     )}
                                     
+                                    <button
+                                      onClick={() => openEditParent(m)}
+                                      className="p-1.5 text-academic-blue/40 hover:text-academic-blue hover:bg-academic-blue/10 rounded-lg transition-all"
+                                      title="Edit parent details"
+                                    >
+                                      <Edit2 className="h-3 w-3" />
+                                    </button>
                                     <button
                                       onClick={() =>
                                         toggle.mutate(
@@ -519,6 +567,69 @@ export function ParentsPage() {
             <button type="button" onClick={resetForm} className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors">Discard</button>
             <button type="submit" disabled={creating} className="btn-premium btn-primary px-10">
               {creating ? 'Processing...' : 'Confirm Registration'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Edit Parent Modal ── */}
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Parent Details" size="sm">
+        <form onSubmit={handleEditSave} className="space-y-5 py-4">
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Full Name</label>
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="input-premium w-full"
+              placeholder="e.g. Robert Smith"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">
+              Recovery Email <span className="opacity-40 font-normal ml-1">(Optional)</span>
+            </label>
+            <input
+              type="email"
+              value={editEmail}
+              onChange={(e) => setEditEmail(e.target.value)}
+              className="input-premium w-full"
+              placeholder="parent@domain.com"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">Relationship</label>
+            <select
+              value={editRelationship}
+              onChange={(e) => setEditRelationship(e.target.value)}
+              className="input-premium w-full font-bold"
+            >
+              <option value="father">Father</option>
+              <option value="mother">Mother</option>
+              <option value="guardian">Guardian</option>
+            </select>
+          </div>
+
+          <div className="rounded-xl bg-academic-blue/5 border border-academic-blue/10 p-3 text-[10px] font-bold text-academic-navy/50 uppercase tracking-wide">
+            Note: Phone number (login credential) cannot be changed here. Contact system admin for phone updates.
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setEditOpen(false)}
+              className="px-6 py-2.5 text-sm font-bold text-muted-foreground hover:text-academic-navy transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editSaving}
+              className="btn-premium btn-primary px-10"
+            >
+              {editSaving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>
