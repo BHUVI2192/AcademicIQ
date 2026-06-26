@@ -146,6 +146,7 @@ export interface UpdateParentVars {
   parentId: string;
   full_name: string;
   email?: string;
+  phone?: string;            // if provided, updates auth login phone too
   mappingId?: string;        // if updating relationship on a specific mapping
   relationship?: string;
 }
@@ -154,27 +155,22 @@ export function useUpdateParent() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (vars: UpdateParentVars) => {
-      const { parentId, full_name, email, mappingId, relationship } = vars;
+      const { parentId, full_name, email, phone, mappingId, relationship } = vars;
 
-      // Update the profile (name + email)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
+      // Use the edge function which has service-role key to update auth.users
+      const { data, error: fnError } = await supabase.functions.invoke('update-parent', {
+        body: {
+          parent_id: parentId,
           full_name: full_name.trim(),
-          ...(email !== undefined ? { email: email.trim() || null } : {}),
-        })
-        .eq('id', parentId);
+          email: email ?? undefined,
+          phone: phone?.trim() || undefined,
+          mapping_id: mappingId,
+          relationship,
+        },
+      });
 
-      if (profileError) throw profileError;
-
-      // Optionally update relationship in the mapping
-      if (mappingId && relationship) {
-        const { error: mapError } = await supabase
-          .from('parent_student_map')
-          .update({ relationship })
-          .eq('id', mappingId);
-        if (mapError) throw mapError;
-      }
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parents-list'] });
@@ -183,6 +179,7 @@ export function useUpdateParent() {
     },
   });
 }
+
 
 export function useLinkParentStudent() {
   const queryClient = useQueryClient();

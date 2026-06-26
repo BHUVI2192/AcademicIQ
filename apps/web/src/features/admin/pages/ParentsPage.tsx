@@ -47,6 +47,7 @@ export function ParentsPage() {
   const [editMappingId, setEditMappingId] = useState('');
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
   const [editRelationship, setEditRelationship] = useState('guardian');
   const [editSaving, setEditSaving] = useState(false);
 
@@ -151,6 +152,7 @@ export function ParentsPage() {
     setEditMappingId(m.id);
     setEditName(m.parent?.full_name ?? '');
     setEditEmail(m.parent?.email ?? '');
+    setEditPhone(m.parent?.phone ?? '');
     setEditRelationship(m.relationship ?? 'guardian');
     setEditOpen(true);
   };
@@ -164,6 +166,7 @@ export function ParentsPage() {
         parentId: editParentId,
         full_name: editName,
         email: editEmail || undefined,
+        phone: editPhone || undefined,
         mappingId: editMappingId,
         relationship: editRelationship,
       });
@@ -612,8 +615,21 @@ export function ParentsPage() {
             </select>
           </div>
 
-          <div className="rounded-xl bg-academic-blue/5 border border-academic-blue/10 p-3 text-[10px] font-bold text-academic-navy/50 uppercase tracking-wide">
-            Note: Phone number (login credential) cannot be changed here. Contact system admin for phone updates.
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-academic-navy/60 ml-1">
+              Mobile Number <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-academic-navy/30" />
+              <input
+                type="tel"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                className="input-premium w-full pl-11"
+                placeholder="+91 00000 00000"
+              />
+            </div>
+            <p className="text-[10px] font-bold text-amber-600/70 uppercase tracking-tight ml-1">⚠ Changing phone updates the login credential</p>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
