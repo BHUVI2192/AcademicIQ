@@ -448,10 +448,10 @@ export function AdminStudentsPage() {
                                   )}
                                   <button
                                     onClick={() => openEditParent(m)}
-                                    className="p-0.5 rounded text-academic-blue/60 hover:text-academic-blue hover:bg-academic-blue/10 transition-all ml-1"
+                                    className="p-1 rounded text-academic-blue/80 hover:text-academic-blue hover:bg-academic-blue/10 transition-all ml-1.5 shrink-0"
                                     title="Edit parent details"
                                   >
-                                    <Edit2 className="h-2.5 w-2.5" />
+                                    <Edit2 className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                               ))
