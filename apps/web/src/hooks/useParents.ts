@@ -25,7 +25,7 @@ export function useParentsList(collegeId?: string | null) {
 
 export interface ParentStudentMapRow extends ParentStudentMap {
   student?: { id: string; full_name: string; roll_number: string };
-  parent?: { id: string; full_name: string; phone: string | null };
+  parent?: { id: string; full_name: string; phone: string | null; email: string | null };
 }
 
 export function useParentStudentMappings(parentId?: string, collegeId?: string | null) {
@@ -35,7 +35,7 @@ export function useParentStudentMappings(parentId?: string, collegeId?: string |
       let q = supabase
         .from('parent_student_map')
         .select(
-          '*, student:students!inner(id, full_name, roll_number, college_id), parent:profiles!parent_student_map_parent_id_fkey(id, full_name, phone)'
+          '*, student:students!inner(id, full_name, roll_number, college_id), parent:profiles!parent_student_map_parent_id_fkey(id, full_name, phone, email)'
         );
       if (parentId) q = q.eq('parent_id', parentId);
       if (collegeId) {

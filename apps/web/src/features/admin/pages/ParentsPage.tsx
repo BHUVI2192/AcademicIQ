@@ -368,7 +368,7 @@ export function ParentsPage() {
                                     
                                     <button
                                       onClick={() => openEditParent(m)}
-                                      className="p-1.5 text-academic-blue/40 hover:text-academic-blue hover:bg-academic-blue/10 rounded-lg transition-all"
+                                      className="p-1.5 text-academic-blue/70 hover:text-academic-blue hover:bg-academic-blue/10 rounded-lg transition-all"
                                       title="Edit parent details"
                                     >
                                       <Edit2 className="h-3 w-3" />

@@ -448,7 +448,7 @@ export function AdminStudentsPage() {
                                   )}
                                   <button
                                     onClick={() => openEditParent(m)}
-                                    className="opacity-0 group-hover/parent:opacity-100 p-0.5 rounded text-academic-blue/60 hover:text-academic-blue hover:bg-academic-blue/10 transition-all"
+                                    className="p-0.5 rounded text-academic-blue/60 hover:text-academic-blue hover:bg-academic-blue/10 transition-all ml-1"
                                     title="Edit parent details"
                                   >
                                     <Edit2 className="h-2.5 w-2.5" />

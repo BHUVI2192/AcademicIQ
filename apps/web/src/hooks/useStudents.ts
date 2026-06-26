@@ -30,7 +30,7 @@ export function useStudents(filters?: { batchId?: string; search?: string; colle
         .select(`
           *, 
           batch:batches(id, name, class_level, stream),
-          parent_student_map(id, is_verified, parent:profiles(id, full_name))
+          parent_student_map(id, is_verified, relationship, parent:profiles(id, full_name, phone, email))
         `)
         .order('roll_number', { ascending: true });
 
