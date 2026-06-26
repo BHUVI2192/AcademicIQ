@@ -10,6 +10,18 @@ export interface ExcelMarkRow {
   is_absent: boolean;
 }
 
+export interface ExcelStudentRow {
+  roll_number: string;
+  full_name: string;
+  date_of_birth?: string;
+  batch_code?: string;
+  exam_wing?: string;
+  parent_name?: string;
+  parent_phone?: string;
+  parent_email?: string;
+  parent_relationship?: string;
+}
+
 export function parseOMRExcel(file: File): Promise<ExcelMarkRow[]> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -25,10 +37,18 @@ export function parseOMRExcel(file: File): Promise<ExcelMarkRow[]> {
 
         // Find the row containing "CANDIDATE ID" (the main header row)
         let headerRowIndex = -1;
+        let candidateIdColIndex = 0;
         for (let i = 0; i < rows.length; i++) {
-          if (rows[i] && rows[i][0] && String(rows[i][0]).toUpperCase().includes('CANDIDATE ID')) {
-            headerRowIndex = i;
-            break;
+          if (rows[i]) {
+            const idx = rows[i].findIndex((cell: any) => {
+              const val = String(cell ?? '').toUpperCase().trim();
+              return val.includes('CANDIDATE ID') || val.includes('ROLL NUMBER') || val.includes('ROLL NO');
+            });
+            if (idx !== -1) {
+              headerRowIndex = i;
+              candidateIdColIndex = idx;
+              break;
+            }
           }
         }
 
@@ -49,7 +69,7 @@ export function parseOMRExcel(file: File): Promise<ExcelMarkRow[]> {
         const mappings: ColumnMapping[] = [];
         let currentSubject = '';
 
-        for (let c = 2; c < headerRow.length; c++) {
+        for (let c = candidateIdColIndex + 2; c < headerRow.length; c++) {
           const cellVal = headerRow[c] ? String(headerRow[c]).trim().toUpperCase() : '';
           
           // If we hit TOTAL or another summary column, we stop mapping subjects
@@ -91,9 +111,9 @@ export function parseOMRExcel(file: File): Promise<ExcelMarkRow[]> {
         // Parse student rows starting after the sub-header row
         for (let i = headerRowIndex + 2; i < rows.length; i++) {
           const row = rows[i];
-          if (!row || !row[0]) continue; // Skip empty rows
+          if (!row || !row[candidateIdColIndex]) continue; // Skip empty rows
 
-          const candidateId = String(row[0]).trim();
+          const candidateId = String(row[candidateIdColIndex]).trim();
           if (!candidateId || candidateId.toUpperCase() === 'TOTAL' || candidateId.toUpperCase().includes('AVERAGE')) {
             continue; // Skip summary / average rows at the end
           }
@@ -143,6 +163,50 @@ export function parseOMRExcel(file: File): Promise<ExcelMarkRow[]> {
         }
 
         resolve(results);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsBinaryString(file);
+  });
+}
+
+export function parseStudentsExcel(file: File): Promise<ExcelStudentRow[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Read sheet as an array of objects
+        const rows = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
+
+        // Normalize keys (trim, lowercase, replace spaces with underscores)
+        const parsed: ExcelStudentRow[] = rows.map((r) => {
+          const norm: Record<string, any> = {};
+          for (const [k, v] of Object.entries(r)) {
+            const key = k.trim().toLowerCase().replace(/\s+/g, '_');
+            norm[key] = v;
+          }
+
+          return {
+            roll_number: String(norm.roll_number ?? norm.rollno ?? norm.usn ?? '').trim().toUpperCase(),
+            full_name: String(norm.full_name ?? norm.name ?? '').trim(),
+            date_of_birth: norm.date_of_birth ?? norm.dob ? String(norm.date_of_birth ?? norm.dob).trim() : undefined,
+            batch_code: norm.batch_code ?? norm.batch ? String(norm.batch_code ?? norm.batch).trim() : undefined,
+            exam_wing: norm.exam_wing ?? norm.wing ? String(norm.exam_wing ?? norm.wing).trim().toUpperCase() : undefined,
+            parent_name: norm.parent_name ?? norm.guardian_name ?? norm.parent_full_name ? String(norm.parent_name ?? norm.guardian_name ?? norm.parent_full_name).trim() : undefined,
+            parent_phone: norm.parent_phone ?? norm.guardian_phone ?? norm.parent_mobile ? String(norm.parent_phone ?? norm.guardian_phone ?? norm.parent_mobile).trim() : undefined,
+            parent_email: norm.parent_email ?? norm.guardian_email ? String(norm.parent_email ?? norm.guardian_email).trim() : undefined,
+            parent_relationship: norm.parent_relationship ?? norm.relationship ? String(norm.parent_relationship ?? norm.relationship).trim() : undefined,
+          };
+        });
+
+        resolve(parsed);
       } catch (err) {
         reject(err);
       }

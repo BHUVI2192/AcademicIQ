@@ -17,6 +17,7 @@ import { TableSkeleton } from '@/components/LoadingSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { isRollNumber, isDateIso, isPhone, normalizePhone } from '@/lib/validators';
 import { parseStudentsCsv, downloadStudentTemplate } from '@/lib/csvParser';
+import { parseStudentsExcel } from '@/lib/excelParser';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/hooks/useAuth';
 import { useColleges } from '@/hooks/useColleges';
@@ -148,7 +149,8 @@ export function AdminStudentsPage() {
 
   const handleFile = async (file: File) => {
     try {
-      const rows = await parseStudentsCsv(file);
+      const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
+      const rows = isExcel ? await parseStudentsExcel(file) : await parseStudentsCsv(file);
       const seen = new Set<string>();
       const parsed: ParsedRow[] = rows.map((r) => {
         const errors: string[] = [];
@@ -625,8 +627,8 @@ export function AdminStudentsPage() {
                 <Download className="h-4 w-4 mr-2" /> Template
               </button>
               <label className="btn-premium btn-primary px-8 cursor-pointer">
-                <Upload className="h-4 w-4 mr-2" /> Ingest CSV
-                <input type="file" accept=".csv" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} className="hidden" />
+                <Upload className="h-4 w-4 mr-2" /> Ingest CSV/Excel
+                <input type="file" accept=".csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} className="hidden" />
               </label>
             </div>
           </div>

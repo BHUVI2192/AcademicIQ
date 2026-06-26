@@ -42,15 +42,17 @@ const calculateMarks = (
   max: number,
   cat: ExamCategory
 ): number => {
-  if (tq <= 0) return Number(Math.max(0, att).toFixed(2));
+  if (tq <= 0) return Number(att.toFixed(2));
   const cor = att - inc;
-  if (cor < 0) return 0;
   const marksPerCorrect = max / tq;
   let marks = cor * marksPerCorrect;
   if (['JEE_Mains', 'JEE_Advanced', 'NEET'].includes(cat)) {
     marks -= inc * 1; 
   }
-  return Number(Math.max(0, marks).toFixed(2));
+  if (cat === 'Board Exam') {
+    return Number(Math.max(0, marks).toFixed(2));
+  }
+  return Number(marks.toFixed(2));
 };
 
 // ─── MarkCell Component ──────────────────────────────────────────────────────
@@ -448,7 +450,7 @@ export function MarksEntryPage() {
 
   const handleFile = async (file: File) => {
     try {
-      const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+      const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
       const rows = isExcel ? await parseOMRExcel(file) : await parseMarksCsv(file);
       const rollMap = new Map(students?.map((s) => [s.roll_number.toUpperCase(), s.id]) ?? []);
       const subjectMap = new Map(subjects.map((s) => [s.subject_name.toLowerCase().trim(), s]));
@@ -816,7 +818,7 @@ export function MarksEntryPage() {
             </div>
             <div className="flex gap-3">
               <button onClick={() => downloadMarksTemplate(subjects.map((s) => s.subject_name))} className="btn btn-secondary py-2"><Download className="h-4 w-4" /> Template</button>
-              <label className="btn btn-primary py-2 cursor-pointer"><Upload className="h-4 w-4" /> Select File<input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} className="hidden" /></label>
+              <label className="btn btn-primary py-2 cursor-pointer"><Upload className="h-4 w-4" /> Select File<input type="file" accept=".csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} className="hidden" /></label>
             </div>
           </div>
           {parsedMarks.length > 0 && (

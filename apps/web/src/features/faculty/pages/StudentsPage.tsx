@@ -10,6 +10,7 @@ import { TableSkeleton } from '@/components/LoadingSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { isRollNumber, isDateIso } from '@/lib/validators';
 import { parseStudentsCsv, downloadStudentTemplate } from '@/lib/csvParser';
+import { parseStudentsExcel } from '@/lib/excelParser';
 import { supabase } from '@/lib/supabaseClient';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -94,7 +95,8 @@ export function StudentsPage() {
 
   const handleFile = async (file: File) => {
     try {
-      const rows = await parseStudentsCsv(file);
+      const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
+      const rows = isExcel ? await parseStudentsExcel(file) : await parseStudentsCsv(file);
       const seen = new Set<string>();
       const parsed: ParsedRow[] = rows.map((r) => {
         const errors: string[] = [];
@@ -156,7 +158,7 @@ export function StudentsPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => setImportOpen(true)} className="btn btn-secondary inline-flex items-center gap-2">
-            <Upload className="h-4 w-4" /> Import CSV
+            <Upload className="h-4 w-4" /> Import CSV/Excel
           </button>
           <button onClick={() => setCreateOpen(true)} className="btn btn-primary inline-flex items-center gap-2">
             <Plus className="h-4 w-4" /> Add Student
@@ -309,7 +311,7 @@ export function StudentsPage() {
           setImportOpen(false);
           setParsedRows([]);
         }}
-        title="Import Students from CSV"
+        title="Import Students from CSV/Excel"
         size="xl"
       >
         <div className="space-y-4">
@@ -319,7 +321,7 @@ export function StudentsPage() {
             </button>
             <input
               type="file"
-              accept=".csv"
+              accept=".csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) handleFile(f);
