@@ -8,6 +8,8 @@
 
 -- 1. Update profiles select policy to be non-recursive
 DROP POLICY IF EXISTS profiles_self_select ON public.profiles;
+DROP POLICY IF EXISTS profiles_view_own ON public.profiles;
+DROP POLICY IF EXISTS profiles_admin_view_all ON public.profiles;
 
 -- Anyone can see their own profile (simple, no recursion)
 CREATE POLICY profiles_view_own ON public.profiles
