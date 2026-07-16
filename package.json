@@ -20,6 +20,7 @@
     "pnpm": ">=8.0.0"
   },
   "devDependencies": {
+    "supabase": "^2.109.1",
     "typescript": "^5.4.5"
   },
   "dependencies": {
